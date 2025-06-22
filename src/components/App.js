@@ -73,7 +73,7 @@ function App() {
   }, [isLoading]);
 
   return(
-    <Container>
+    <Container style={{ paddingTop: '80px' }}>
       <Navigation account={account} />
 
       <div className="text-center my-4">

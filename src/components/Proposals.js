@@ -314,33 +314,36 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
         </div>
       </div>
       
-      <div className="alert alert-info mb-3 p-2" style={{ fontSize: '0.85rem' }}>
-        <p className="mb-1"><strong>Demo Setup:</strong> Proposals 1-3 are pre-created and finalized upon deployment. Proposal 4 has votes but is not finalized so you can interact with it.</p>
-        <p className="mb-0">&nbsp;&nbsp;Hardhat 0 is the <u>deployer</u> & a <u>token holder</u> <em>but</em> did <u>not</u> vote during deployment</p>
-        <p className="mb-0">&nbsp;&nbsp;Hardhat 1 is a <u>token holder</u> & <u>voted in favor</u> for proposal 1-<u>3</u></p>
-        <p className="mb-0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>but</em> did <u>not</u> yet vote for proposal <u>4</u> to avoid reaching quorum upon deployment in order to display in-progress/unfinalized example</p>
-        <p className="mb-0">&nbsp;&nbsp;Hardhat 2 & 3 ARE <u>token holders</u> & <u>voted in favor</u> for proposal 1-<u>4</u></p>
-        <p className="mb-1">&nbsp;&nbsp;Hardhat 4 is <u>NOT a token holder</u> & therefore <u>cannot vote or create proposals</u></p>
-        <p className="mb-0">Hover over proposal names to see descriptions. <strong>Create your own proposals using the form above.</strong></p>
-      </div>
-      
-      {/* Responsive table to display all proposals */}
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th className="text-center">#</th>
-            <th>Proposal Name</th>
-            <th className="text-center">Amount</th>
-            <th className="text-center">Recipient</th>
-            <th className="text-center">Recipient Balance</th>
-            <th className="text-center">Status</th>
-            <th className="text-center">Votes</th>
-            <th className="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* Map through all proposals and create a row for each one */}
-          {proposals.map((proposal, index) => (
+      {/* Custom table with fixed header */}
+      <div style={{ 
+        position: 'relative',
+        maxHeight: '333px',
+        overflow: 'auto',
+        border: '1px solid #dee2e6'
+      }}>
+        <Table striped bordered hover style={{ marginBottom: 0 }}>
+          <thead style={{ 
+            position: 'sticky', 
+            top: 0,
+            backgroundColor: 'white',
+            zIndex: 10
+          }}>
+            <tr>
+              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>#</th>
+              <th style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Proposal Name</th>
+              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Amount</th>
+              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Recipient</th>
+              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Recipient Balance</th>
+              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Status</th>
+              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Votes</th>
+              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Map through all proposals in reverse order (most recent first) */}
+            {/*Created a Copy of the Proposals Array using the spread operator [...proposals] to create a new arra to avoidmutating the original array which could cause side effects*/}
+            {/* ↓ */}
+            {[...proposals].reverse().map((proposal, index) => (
             <tr key={index}>
               {/* ↑ React requires a unique key for each element/child in a list */}
 
@@ -476,7 +479,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                       {/* Enhanced badge with proper text wrapping and sizing
                           Uses maxWidth, wordBreak and hyphens for reliable text wrapping
                           Ensures consistent appearance across different screen sizes
-                      */}
+                          */}
                       <Badge bg="secondary" style={{ 
                         whiteSpace: 'normal', 
                         textAlign: 'center',
@@ -530,7 +533,18 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
             </tr>
           )}
         </tbody>
-      </Table>
+        </Table>
+      </div>
+      <br/>
+      <div className="alert alert-info mb-3 p-2" style={{ fontSize: '0.85rem' }}>
+        <p className="mb-1"><strong>Demo Setup:</strong> Proposals 1-3 are pre-created and finalized upon deployment. Proposal 4 has votes but is not finalized so you can interact with it.</p>
+        <p className="mb-0">&nbsp;&nbsp;Hardhat 0 is the <u>deployer</u> & a <u>token holder</u> <em>but</em> did <u>not</u> vote during deployment</p>
+        <p className="mb-0">&nbsp;&nbsp;Hardhat 1 is creator of the deployed proposals, a <u>token holder</u> & <u>voted in favor</u> for proposal 1-<u>3</u></p>
+        <p className="mb-0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>but</em> did <u>not</u> yet vote for proposal <u>4</u> to avoid reaching quorum upon deployment in order to display in-progress/unfinalized example</p>
+        <p className="mb-0">&nbsp;&nbsp;Hardhat 2 & 3 ARE <u>token holders</u> & <u>voted in favor</u> for proposal 1-<u>4</u></p>
+        <p className="mb-1">&nbsp;&nbsp;Hardhat 4 is <u>NOT a token holder</u> & therefore <u>cannot vote or create proposals</u></p>
+        <p className="mb-0">Hover over proposal names to see descriptions. <strong>Create your own proposals using the form above.</strong></p>
+      </div>
     </>
   );
 }

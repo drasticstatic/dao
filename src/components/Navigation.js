@@ -1,17 +1,19 @@
 import Navbar from 'react-bootstrap/Navbar';
+import Container from 'react-bootstrap/Container';
 
 import logo from '../logo.png';
 
 const Navigation = ({ account }) => {
   return (
-    <Navbar className='my-3'>
-      <img
-        alt="logo"
-        src={logo}
-        width="40"
-        height="40"
-        className="d-inline-block align-top mx-3"
-      />
+    <Navbar fixed="top" bg="white" className="py-2 shadow-sm">
+      <Container>
+        <img
+          alt="logo"
+          src={logo}
+          width="40"
+          height="40"
+          className="d-inline-block align-top me-3"
+        />
       <Navbar.Brand href="#">Dapp University DAO</Navbar.Brand>
       <Navbar.Collapse className="justify-content-end">
         <Navbar.Text className="d-flex align-items-center">
@@ -40,6 +42,7 @@ const Navigation = ({ account }) => {
           </span>
         </Navbar.Text>
       </Navbar.Collapse>
+      </Container>
     </Navbar>
   );
 }
