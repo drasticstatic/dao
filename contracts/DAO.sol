@@ -16,7 +16,9 @@ contract DAO {
         string description; // description of the proposal to be required
         uint256 amount; // amount of ether requested for the proposal
         address payable recipient; // address of the recipient who will receive the funds
-        uint256 votes; // total votes received for the proposal
+        int256 votes; // net votes (positive votes - negative votes)
+        uint256 positiveVotes; // votes in favor
+        uint256 negativeVotes; // votes against
         bool finalized; // flag to indicate if the proposal has been finalized true/false
     }
 
@@ -24,7 +26,7 @@ contract DAO {
     uint256 public proposalCount; // total number of proposals created
     mapping(uint256 => Proposal) public proposals; // mapping to store proposals by their id
 
-    mapping(address => mapping(uint256 => bool)) votes; // mapping to track if an address has voted on a proposal
+    mapping(address => mapping(uint256 => int8)) votes; // mapping to track if an address has voted on a proposal (1 = for, -1 = against, 0 = not voted)
     // Note mapping inside mapping
 
     /* Events stream data to the blockchain, so we can listen to them in our frontend
@@ -43,7 +45,7 @@ contract DAO {
         address recipient,
         address creator
     );
-    event Vote(uint256 id, address investor);
+    event Vote(uint256 id, address investor, bool inFavor);
     event Finalize(uint256 id);
 
     constructor(Token _token, uint256 _quorum) {
@@ -94,7 +96,9 @@ contract DAO {
             _description,
             _amount,
             _recipient,
-            0, // initial votes are 0
+            0, // initial net votes are 0
+            0, // initial positive votes are 0
+            0, // initial negative votes are 0
             false // 'not finalized' when initially created
         );
 
@@ -108,27 +112,51 @@ contract DAO {
         );
     }
 
-    // Vote on proposal (vote = vote in favor of the proposal)
-        // Vote -or- Abstain from voting
-        // Not yet setup to allow voting against a proposal - homework for later
+    // Vote on proposal (either in favor or against)
+    function vote(uint256 _id, bool _inFavor) external onlyInvestor {
+        // Fetch proposal from mapping by id
+        Proposal storage proposal = proposals[_id];
+
+        // Don't let investors vote twice
+        require(votes[msg.sender][_id] == 0, "already voted");
+
+        // Get voter's token balance
+        uint256 voterBalance = token.balanceOf(msg.sender);
+        
+        if (_inFavor) {
+            // Vote in favor - increase positive votes and net votes
+            proposal.positiveVotes += voterBalance;
+            proposal.votes += int256(voterBalance);
+            votes[msg.sender][_id] = 1; // Mark as voted in favor
+        } else {
+            // Vote against - increase negative votes and decrease net votes
+            proposal.negativeVotes += voterBalance;
+            proposal.votes -= int256(voterBalance);
+            votes[msg.sender][_id] = -1; // Mark as voted against
+        }
+
+        // Emit an event
+        emit Vote(_id, msg.sender, _inFavor);
+    }
+    
+    // Legacy vote function (always votes in favor) for backward compatibility
     function vote(uint256 _id) external onlyInvestor {
         // Fetch proposal from mapping by id
         Proposal storage proposal = proposals[_id];
 
         // Don't let investors vote twice
-        // Require opposite of boolean return; ie: if they voted (true), false if haven't
-        require(!votes[msg.sender][_id], "already voted");
-        // '!' means opposite vs using '== false'
+        require(votes[msg.sender][_id] == 0, "already voted");
 
-        // update votes - token weighted
-        proposal.votes += token.balanceOf(msg.sender);// Increase proposal votes by the voter's token balance
-            // '+=', is the increment operator, it increases the value by the right operand
-
-        // Track that user has voted
-        votes[msg.sender][_id] = true;
+        // Get voter's token balance
+        uint256 voterBalance = token.balanceOf(msg.sender);
+        
+        // Vote in favor - increase positive votes and net votes
+        proposal.positiveVotes += voterBalance;
+        proposal.votes += int256(voterBalance);
+        votes[msg.sender][_id] = 1; // Mark as voted in favor
 
         // Emit an event
-        emit Vote(_id, msg.sender);
+        emit Vote(_id, msg.sender, true);
     }
 
     // Finalize proposal & tranfer funds
@@ -142,8 +170,8 @@ contract DAO {
         // Mark proposal as finalized
         proposal.finalized = true;
 
-        // Check that proposal has enough votes
-        require(proposal.votes >= quorum, "must reach quorum to finalize proposal");
+        // Check that proposal has enough net votes
+        require(proposal.votes >= int256(quorum), "must reach quorum to finalize proposal");
 
         // Check that the contract has enough ether
         require(address(this).balance >= proposal.amount);
@@ -158,7 +186,17 @@ contract DAO {
 
     // Check if an investor has voted on a specific proposal
     function hasVoted(address _investor, uint256 _id) public view returns (bool) {
-        return votes[_investor][_id];
+        return votes[_investor][_id] != 0;
+    }
+    
+    // Check if an investor has voted in favor of a specific proposal
+    function hasVotedInFavor(address _investor, uint256 _id) public view returns (bool) {
+        return votes[_investor][_id] == 1;
+    }
+    
+    // Check if an investor has voted against a specific proposal
+    function hasVotedAgainst(address _investor, uint256 _id) public view returns (bool) {
+        return votes[_investor][_id] == -1;
     }
 
 }

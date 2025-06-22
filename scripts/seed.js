@@ -62,16 +62,16 @@ async function main() {
         `Proposals 1 thru 3 are automatically finalized upon deployment`, ether(100), recipient.address)
       await transaction.wait()
 
-      // Vote 1
-      transaction = await dao.connect(investor1).vote(i + 1)
+      // Vote 1 - in favor
+      transaction = await dao.connect(investor1)["vote(uint256,bool)"](i + 1, true)
       await transaction.wait()
 
-      // Vote 2
-      transaction = await dao.connect(investor2).vote(i + 1)
+      // Vote 2 - in favor
+      transaction = await dao.connect(investor2)["vote(uint256,bool)"](i + 1, true)
       await transaction.wait()
 
-      // Vote 3
-      transaction = await dao.connect(investor3).vote(i + 1)
+      // Vote 3 - in favor
+      transaction = await dao.connect(investor3)["vote(uint256,bool)"](i + 1, true)
       await transaction.wait()
 
       // Finalize
@@ -88,12 +88,12 @@ async function main() {
       `Proposal 4 is intentionally not finalized so users can intially interact with it upon deployment`, ether(100), recipient.address)
     await transaction.wait()
 
-    // Vote 1
-    transaction = await dao.connect(investor2).vote(4)
+    // Vote 1 - in favor
+    transaction = await dao.connect(investor2)["vote(uint256,bool)"](4, true)
     await transaction.wait()
 
-    // Vote 2
-    transaction = await dao.connect(investor3).vote(4)
+    // Vote 2 - in favor
+    transaction = await dao.connect(investor3)["vote(uint256,bool)"](4, true)
     await transaction.wait()
     
     // Note: We intentionally do not finalize Proposal 4 so users can interact with it

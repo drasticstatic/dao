@@ -181,11 +181,9 @@ This provides immediate feedback to users when actions are in progress.
 
 Potential enhancements for the component:
 
-1. Add ability to vote against proposals (not only in favor)
-2. Require proposals have a description upon creation
-3. Make the DAO custody ERC-20 tokens instead of Ether - e.g. proposals are paid out in USDC
-4. Add ability to cancel proposals
-4. Add ability to edit proposals before they are voted on
-6. Implement vote delegation
-7. Add proposal history and analytics
-8. Add animations for state transitions
+1. Make the DAO custody ERC-20 tokens instead of Ether - e.g. proposals are paid out in USDC
+2. Add ability to cancel proposals
+3. Add ability to edit proposals before they are voted on
+4. Implement vote delegation
+5. Add proposal history and analytics
+6. Add animations for state transitions

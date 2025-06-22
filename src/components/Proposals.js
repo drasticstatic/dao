@@ -160,61 +160,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
     }
   };
 
-  /**
-   * Helper function to show vote progress with a visual progress bar
-   * 
-   * @param {BigNumber} votes - Current vote count for the proposal
-   * @param {BigNumber} quorumValue - Quorum threshold required
-   * @returns {JSX.Element} - Progress bar with vote information
-   */
 
-  /* Number Formatting
-      This function formats large numbers with K/M/B/T notation for better readability
-        & provides tooltips to show exact values on hover*/
-  const getVoteProgress = (votes, quorumValue) => {
-    const percentage = (votes / quorumValue) * 100;// Calculate percentage of votes compared to quorum
-    
-    // Format vote count in Ether format for easier reading
-    const formatVoteCount = (count) => {
-      const etherValue = Number(ethers.utils.formatEther(count));
-      if (etherValue >= 1000) {
-        return (etherValue / 1000).toFixed(1) + 'K ETH';
-      }
-      return etherValue.toFixed(1) + ' ETH';
-    };
-    
-    return (
-      <div>
-        {/* Vote count and percentage display */}
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <OverlayTrigger
-            placement="top"
-            overlay={<Tooltip>{ethers.utils.formatUnits(votes, 0)} tokens</Tooltip>}
-          >
-            <small>{formatVoteCount(votes)}</small>
-          </OverlayTrigger>
-          <small><strong>{Math.min(100, Math.round(percentage))}% of quorum</strong></small>
-        </div>
-        
-        {/* Progress bar container */}
-        <div style={{ 
-          height: '8px', 
-          width: '100%', 
-          backgroundColor: '#e9ecef', 
-          borderRadius: '4px',
-          overflow: 'hidden'
-        }}>
-          {/* Progress bar fill - changes color blue -> green when quorum is reached */}
-          <div style={{ 
-            height: '100%', 
-            width: `${Math.min(100, Math.round(percentage))}%`, 
-            backgroundColor: percentage >= 100 ? '#28a745' : '#007bff',
-            borderRadius: '4px'
-          }}></div>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <>
@@ -335,7 +281,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
               <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Recipient</th>
               <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Recipient Balance</th>
               <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Status</th>
-              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Votes</th>
+              <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Votes (% of Quorum)</th>
               <th className="text-center" style={{ backgroundColor: 'white', position: 'sticky', top: 0, boxShadow: '0 2px 3px rgba(0,0,0,0.1)' }}>Actions</th>
             </tr>
           </thead>
@@ -393,50 +339,82 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
               {/* Status badge (color-coded) */}
               <td className="text-center">{getStatusBadge(proposal)}</td>
               
-              {/* Vote progress bar */}
-              <td className="text-center">{getVoteProgress(proposal.votes, quorum)}</td>
+              {/* Vote progress bars */}
+              <td className="text-center">
+                {/* For votes */}
+                <div className="mb-2">
+                  <div className="d-flex justify-content-between">
+                    <small className="text-success">For: {ethers.utils.formatEther(proposal.positiveVotes || 0)} ETH</small>
+                    <small className="text-success">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.positiveVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}% of quorum</small>
+                  </div>
+                  <div style={{ height: '8px', width: '100%', backgroundColor: '#e9ecef', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ 
+                      height: '100%', 
+                      width: `${Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.positiveVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%`, 
+                      backgroundColor: '#28a745',
+                      borderRadius: '4px'
+                    }}></div>
+                  </div>
+                </div>
+                
+                {/* Against votes */}
+                <div>
+                  <div className="d-flex justify-content-between">
+                    <small className="text-danger">Against: {ethers.utils.formatEther(proposal.negativeVotes || 0)} ETH</small>
+                    <small className="text-danger">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.negativeVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}% of quorum</small>
+                  </div>
+                  <div style={{ height: '8px', width: '100%', backgroundColor: '#e9ecef', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ 
+                      height: '100%', 
+                      width: `${Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.negativeVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%`, 
+                      backgroundColor: '#dc3545',
+                      borderRadius: '4px'
+                    }}></div>
+                  </div>
+                </div>
+              </td>
               
               {/* Action buttons (vote, finalize) based on proposal state */}
               <td>
                 <div className="d-flex gap-2 justify-content-center">
-                  {/* Vote button - only show if user hasn't voted */}
+                  {/* Vote buttons - only show if user hasn't voted */}
                   {!proposal.finalized && !userVotes[proposal.id.toString()] && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      style={{ width: proposal.votes < quorum ? '100%' : 'auto' }}
-                      disabled={votingProposalId === proposal.id}
-                      onClick={async () => {
-                        const proposalId = proposal.id.toString();
-                        console.log(`Attempting to vote on proposal ${proposalId}...`);
-                        
-                        // Show loading state
-                        setVotingProposalId(proposal.id);
-                        
-                        try {
-                          // Call the blockchain transaction
-                          const signer = await provider.getSigner();
-                          const userAddress = await signer.getAddress();
-                          console.log(`User address: ${userAddress}`);
+                    <div className="d-flex gap-1">
+                      <Button
+                        variant="success"
+                        size="sm"
+                        disabled={votingProposalId === proposal.id}
+                        onClick={async () => {
+                          const proposalId = proposal.id.toString();
+                          console.log(`Attempting to vote in favor of proposal ${proposalId}...`);
                           
-                          // Call the vote function on the contract
-                          console.log('Calling vote function on contract...');
-                          const transaction = await dao.connect(signer).vote(proposal.id);
-                          console.log('Transaction sent:', transaction.hash);
+                          // Show loading state
+                          setVotingProposalId(proposal.id);
                           
-                          // Wait for transaction to be mined
-                          console.log('Waiting for transaction confirmation...');
-                          const receipt = await transaction.wait();
-                          console.log('Transaction confirmed:', receipt);
-                          
-                          // Update vote state after successful transaction
-                          console.log('Transaction successful, updating UI state');
-                          
-                          // Update local state to reflect the vote
-                          const newVotes = {...userVotes};
-                          newVotes[proposalId] = true;
-                          setUserVotes(newVotes);
-                          console.log(`Vote recorded for proposal ${proposalId}`);
+                          try {
+                            // Call the blockchain transaction
+                            const signer = await provider.getSigner();
+                            const userAddress = await signer.getAddress();
+                            console.log(`User address: ${userAddress}`);
+                            
+                            // Call the vote function on the contract with true for in favor
+                            console.log('Calling vote function on contract...');
+                            const transaction = await dao.connect(signer)["vote(uint256,bool)"](proposal.id, true);
+                            console.log('Transaction sent:', transaction.hash);
+                            
+                            // Wait for transaction to be mined
+                            console.log('Waiting for transaction confirmation...');
+                            const receipt = await transaction.wait();
+                            console.log('Transaction confirmed:', receipt);
+                            
+                            // Update vote state after successful transaction
+                            console.log('Transaction successful, updating UI state');
+                            
+                            // Update local state to reflect the vote
+                            const newVotes = {...userVotes};
+                            newVotes[proposalId] = true;
+                            setUserVotes(newVotes);
+                            console.log(`Vote recorded for proposal ${proposalId}`);
 
                         // Error Handling:
                         } catch (error) {
@@ -468,9 +446,80 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                       {votingProposalId === proposal.id ? (
                         <><Spinner as="span" animation="border" size="sm" /> Voting...</>
                       ) : (
-                        'Vote'
+                        <>👍 For</>
                       )}
                     </Button>
+                    
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={votingProposalId === proposal.id}
+                      onClick={async () => {
+                        const proposalId = proposal.id.toString();
+                        console.log(`Attempting to vote against proposal ${proposalId}...`);
+                        
+                        // Show loading state
+                        setVotingProposalId(proposal.id);
+                        
+                        try {
+                          // Call the blockchain transaction
+                          const signer = await provider.getSigner();
+                          const userAddress = await signer.getAddress();
+                          console.log(`User address: ${userAddress}`);
+                          
+                          // Call the vote function on the contract with false for against
+                          console.log('Calling vote function on contract...');
+                          const transaction = await dao.connect(signer)["vote(uint256,bool)"](proposal.id, false);
+                          console.log('Transaction sent:', transaction.hash);
+                          
+                          // Wait for transaction to be mined
+                          console.log('Waiting for transaction confirmation...');
+                          const receipt = await transaction.wait();
+                          console.log('Transaction confirmed:', receipt);
+                          
+                          // Update vote state after successful transaction
+                          console.log('Transaction successful, updating UI state');
+                          
+                          // Update local state to reflect the vote
+                          const newVotes = {...userVotes};
+                          newVotes[proposalId] = true;
+                          setUserVotes(newVotes);
+                          console.log(`Vote recorded for proposal ${proposalId}`);
+                          
+                        // Error Handling:
+                        } catch (error) {
+                          console.error('Error voting:', error);
+                          
+                          // Check if the error is due to not being a token holder
+                          if (error.reason && error.reason.includes('must be token holder')) {
+                            window.alert('You must be a token holder to vote on proposals. Please acquire DAO tokens first.');
+                          } else if (error.message && error.message.includes('must be token holder')) {
+                            window.alert('You must be a token holder to vote on proposals. Please acquire DAO tokens first.');
+                          } else if (error.reason && error.reason.includes('already voted')) {
+                            window.alert('You have already voted on this proposal.');
+                          } else if (error.message && error.message.includes('user rejected')) {
+                            window.alert('Transaction was rejected by the user.');
+                          } else if (error.reason) {
+                            window.alert(`Transaction failed: ${error.reason}`);
+                          } else if (error.message) {
+                            window.alert(`Error: ${error.message}`);
+                          } else {
+                            window.alert('Transaction failed. Please check console for details.');
+                          }
+                        }
+                        
+                        // Reset loading state and refresh data
+                        setVotingProposalId(null);
+                        setIsLoading(true);
+                      }}
+                    >
+                      {votingProposalId === proposal.id ? (
+                        <><Spinner as="span" animation="border" size="sm" /> Voting...</>
+                      ) : (
+                        <>👎 Against</>
+                      )}
+                    </Button>
+                    </div>
                   )}
                   
                   {/* Voted badge */}
