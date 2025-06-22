@@ -52,7 +52,7 @@ function App() {
 
     // "i" = iterator
     for(var i = 0; i < count; i++) {
-      const proposal = await dao.proposals(i + 1) // i+1 b/c i=0 intially
+      const proposal = await dao.proposals(i + 1) // i+1 b/c i=0 initially
       items.push(proposal) // "push" is a function that adds (at the end) to the items array above
     }
 

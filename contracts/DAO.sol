@@ -13,6 +13,7 @@ contract DAO {
     struct Proposal {
         uint256 id; // unique identifier for the proposal
         string name; // name of the proposal
+        string description; // description of the proposal to be required
         uint256 amount; // amount of ether requested for the proposal
         address payable recipient; // address of the recipient who will receive the funds
         uint256 votes; // total votes received for the proposal
@@ -36,6 +37,8 @@ contract DAO {
         Event stream can fetch previous events from the blockchain, so we can see the history of actions*/
     event Propose(
         uint id,
+        string name,
+        string description,
         uint256 amount,
         address recipient,
         address creator
@@ -66,6 +69,7 @@ contract DAO {
     // Create proposal
     function createProposal(
         string memory _name,
+        string memory _description,
         uint256 _amount,
         address payable _recipient // recipient must be 'payable' to receive ether
     ) external onlyInvestor {
@@ -73,6 +77,7 @@ contract DAO {
         require(_amount > 0, "amount must be greater than 0"); // Ensure the amount is greater than 0
         require(_recipient != address(0), "recipient cannot be zero address"); // Ensure the recipient is not the zero address
         require(bytes(_name).length > 0, "proposal name cannot be empty"); // Ensure the proposal name is not empty
+        require(bytes(_description).length > 0, "proposal description cannot be empty"); // Ensure the proposal description is not empty
 
         proposalCount++; // increment proposal count '++' or ' = proposalCount + 1'
         // '++' is increment operator, it increases the value by 1
@@ -86,6 +91,7 @@ contract DAO {
         proposals[proposalCount] = Proposal(
             proposalCount,
             _name,
+            _description,
             _amount,
             _recipient,
             0, // initial votes are 0
@@ -94,6 +100,8 @@ contract DAO {
 
         emit Propose(
             proposalCount,
+            _name,
+            _description,
             _amount,
             _recipient,
             msg.sender

@@ -221,7 +221,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
       {/* Component header with title, quorum information, and debug buttons */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h4 className="mb-1">Governance Proposals</h4>
+          <h4 className="mb-1">Governance | Proposals</h4>
           <p className="text-muted mb-0" style={{ paddingLeft: '20px' }}>
             <small>Quorum required: {'> '}</small>
             <OverlayTrigger
@@ -277,6 +277,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
           <Button 
             variant="outline-info" 
             size="sm" 
+            className="me-2"
             onClick={async () => {
               console.log('Manually reloading blockchain data...');
               
@@ -313,18 +314,28 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
         </div>
       </div>
       
+      <div className="alert alert-info mb-3 p-2" style={{ fontSize: '0.85rem' }}>
+        <p className="mb-1"><strong>Demo Setup:</strong> Proposals 1-3 are pre-created and finalized upon deployment. Proposal 4 has votes but is not finalized so you can interact with it.</p>
+        <p className="mb-0">&nbsp;&nbsp;Hardhat 0 is the <u>deployer</u> & a <u>token holder</u> <em>but</em> did <u>not</u> vote during deployment</p>
+        <p className="mb-0">&nbsp;&nbsp;Hardhat 1 is a <u>token holder</u> & <u>voted in favor</u> for proposal 1-<u>3</u></p>
+        <p className="mb-0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>but</em> did <u>not</u> yet vote for proposal <u>4</u> to avoid reaching quorum upon deployment in order to display in-progress/unfinalized example</p>
+        <p className="mb-0">&nbsp;&nbsp;Hardhat 2 & 3 ARE <u>token holders</u> & <u>voted in favor</u> for proposal 1-<u>4</u></p>
+        <p className="mb-1">&nbsp;&nbsp;Hardhat 4 is <u>NOT a token holder</u> & therefore <u>cannot vote or create proposals</u></p>
+        <p className="mb-0">Hover over proposal names to see descriptions. <strong>Create your own proposals using the form above.</strong></p>
+      </div>
+      
       {/* Responsive table to display all proposals */}
       <Table striped bordered hover responsive>
         <thead>
           <tr>
-            <th>#</th>
+            <th className="text-center">#</th>
             <th>Proposal Name</th>
-            <th>Recipient</th>
-            <th>Recipient Balance</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Votes</th>
-            <th>Actions</th>
+            <th className="text-center">Amount</th>
+            <th className="text-center">Recipient</th>
+            <th className="text-center">Recipient Balance</th>
+            <th className="text-center">Status</th>
+            <th className="text-center">Votes</th>
+            <th className="text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -334,38 +345,43 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
               {/* ↑ React requires a unique key for each element/child in a list */}
 
               {/* Proposal ID */}
-              <td>{proposal.id.toString()}</td>
+              <td className="text-center">{proposal.id.toString()}</td>
               
-              {/* Proposal name with tooltip showing ID */}
+              {/* Proposal name with tooltip showing description */}
               <td>
                 <OverlayTrigger
                   placement="top"
-                  overlay={<Tooltip>Proposal ID: {proposal.id.toString()}</Tooltip>}
-                >
+                  overlay={<Tooltip>
+                    <div>
+                      <strong>ID:</strong> {proposal.id.toString()}<br/>
+                      <strong>Description:</strong> {proposal.description || "No description provided"}
+                    </div>
+                  </Tooltip>}
+                  >
                   <span>{proposal.name}</span>
                 </OverlayTrigger>
               </td>
+                
+            {/* Amount in ETH (converted from wei) */}
+            <td className="text-center">{ethers.utils.formatUnits(proposal.amount, "ether")} ETH</td>
               
               {/* Recipient address (shortened) with tooltip showing full address */}
-              <td>
+              <td className="text-center">
                 <OverlayTrigger
                   placement="top"
                   overlay={<Tooltip>{proposal.recipient}</Tooltip>}
-                >
+                  >
                   <span>{formatAddress(proposal.recipient)}</span>
                 </OverlayTrigger>
               </td>
               
               {/* Recipient balance in ETH */}
-              <td>
+              <td className="text-center">
                 {recipientBalances[proposal.recipient] ? 
                   `${parseFloat(recipientBalances[proposal.recipient]).toFixed(4)} ETH` : 
                   <small className="text-muted">Loading...</small>
                 }
               </td>
-              
-              {/* Amount in ETH (converted from wei) */}
-              <td>{ethers.utils.formatUnits(proposal.amount, "ether")} ETH</td>
               
               {/* //{proposal.finalized ? 'Approved' : 'In Progress'} */}
               {/* ? = Ternary operator ; return string 'Approved' if proposal.finalized is true, else return 'In Progress' */}
@@ -375,7 +391,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
               <td className="text-center">{getStatusBadge(proposal)}</td>
               
               {/* Vote progress bar */}
-              <td>{getVoteProgress(proposal.votes, quorum)}</td>
+              <td className="text-center">{getVoteProgress(proposal.votes, quorum)}</td>
               
               {/* Action buttons (vote, finalize) based on proposal state */}
               <td>
@@ -422,12 +438,22 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                         // Error Handling:
                         } catch (error) {
                           console.error('Error voting:', error);
-                          if (error.reason) {
+                          
+                          // Check if the error is due to not being a token holder
+                          if (error.reason && error.reason.includes('must be token holder')) {
+                            window.alert('You must be a token holder to vote on proposals. Please acquire DAO tokens first.');
+                          } else if (error.message && error.message.includes('must be token holder')) {
+                            window.alert('You must be a token holder to vote on proposals. Please acquire DAO tokens first.');
+                          } else if (error.reason && error.reason.includes('already voted')) {
+                            window.alert('You have already voted on this proposal.');
+                          } else if (error.message && error.message.includes('user rejected')) {
+                            window.alert('Transaction was rejected by the user.');
+                          } else if (error.reason) {
                             window.alert(`Transaction failed: ${error.reason}`);
                           } else if (error.message) {
                             window.alert(`Error: ${error.message}`);
                           } else {
-                            window.alert('User rejected or transaction reverted');
+                            window.alert('Transaction failed. Please check console for details.');
                           }
                         }
                         

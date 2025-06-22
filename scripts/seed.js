@@ -58,7 +58,8 @@ async function main() {
 
   for (var i = 0; i < 3; i++) {
       // Create Proposal
-      transaction = await dao.connect(investor1).createProposal(`Proposal ${i + 1}`, ether(100), recipient.address)
+      transaction = await dao.connect(investor1).createProposal(`Deployed Test Proposal ${i + 1}`,
+        `Proposals 1 thru 3 are automatically finalized upon deployment`, ether(100), recipient.address)
       await transaction.wait()
 
       // Vote 1
@@ -83,7 +84,8 @@ async function main() {
     console.log(`\u00A0Creating one more proposal...\n`)
 
     // Create one more proposal
-    transaction = await dao.connect(investor1).createProposal(`Proposal 4`, ether(100), recipient.address)
+    transaction = await dao.connect(investor1).createProposal(`Deployed Test Proposal 4`,
+      `Proposal 4 is intentionally not finalized so users can intially interact with it upon deployment`, ether(100), recipient.address)
     await transaction.wait()
 
     // Vote 1
@@ -93,6 +95,8 @@ async function main() {
     // Vote 2
     transaction = await dao.connect(investor3).vote(4)
     await transaction.wait()
+    
+    // Note: We intentionally do not finalize Proposal 4 so users can interact with it
 
     console.log(`\u00A0\u00A0✓ Finished ✓\n`)
 }
