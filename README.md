@@ -49,12 +49,26 @@ The Proposals component has been enhanced with the following features:
 - **Better Error Handling**: Detailed error messages from blockchain transactions
 - **Empty State Handling**: Clear message when no proposals exist
 
+### Latest Enhancements
+
+- **Blockchain Vote Verification**: Direct verification of votes using smart contract calls
+- **MetaMask Account Change Detection**: Automatic UI refresh when switching accounts
+- **Number Formatting**: K/M/B/T notation for large numbers with tooltips showing exact values
+- **Improved Badge Styling**: Better visual hierarchy with centered, properly sized badges
+- **Copyable Addresses**: Click-to-copy functionality for Ethereum addresses
+- **Connection Indicators**: Clear visual indicators of wallet connection status
+- **Responsive Layout**: Better organization of UI elements across different screen sizes
+- **Developer Tools**: Debug buttons and enhanced console logging for development
+
 ## Technical Implementation Notes
 
-- **Vote Tracking**: The component tracks votes locally in React state since Solidity mappings aren't directly accessible
+- **Vote Tracking**: Uses the contract's `hasVoted` function to verify votes directly from the blockchain
 - **Conditional Rendering**: UI elements change based on proposal state and user actions
 - **Blockchain Interactions**: Uses ethers.js to interact with the smart contracts
 - **Responsive Design**: Bootstrap components for a mobile-friendly interface
+- **Event Handling**: Listens for MetaMask account changes to refresh data automatically
+- **Number Formatting**: Smart formatting of large numbers with appropriate notation
+- **Error Handling**: Robust error handling for blockchain interactions with user feedback
 
 ## Getting Started
 

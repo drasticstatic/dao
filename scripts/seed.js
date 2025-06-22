@@ -32,7 +32,7 @@ async function main() {
 
   // Fetch deployed token
   const token = await ethers.getContractAt('Token', config[chainId].token.address)
-  console.log(`Token fetched: ${token.address}\n`)
+  console.log(`\u00A0✓ Token fetched: ${token.address}\n`)
 
   // Send tokens to investors - each one gets 20%
   transaction = await token.transfer(investor1.address, tokens(200000))
@@ -48,12 +48,13 @@ async function main() {
 
   // Fetch deployed dao
   const dao = await ethers.getContractAt('DAO', config[chainId].dao.address)
-  console.log(`DAO fetched: ${dao.address}\n`)
+  console.log(`\u00A0✓ DAO fetched: ${dao.address}\n`)
+  console.log("✓✓ Deployment complete! ✓✓\n")
 
   // Funder sends Ether to DAO treasury
   transaction = await funder.sendTransaction({ to: dao.address, value: ether(1000) }) // 1,000 Ether
   await transaction.wait()
-  console.log(`Sent funds to dao treasury...\n`)
+  console.log(`\u00A0\u00A0✓ Sent funds to dao treasury...\n`)
 
   for (var i = 0; i < 3; i++) {
       // Create Proposal
@@ -76,10 +77,10 @@ async function main() {
       transaction = await dao.connect(investor1).finalizeProposal(i + 1)
       await transaction.wait()
 
-      console.log(`Created & Finalized Proposal ${i + 1}\n`)
+      console.log(`\u00A0\u00A0\u00A0✓ Created & Finalized Proposal ${i + 1}\n`)
   }
 
-    console.log(`Creating one more proposal...\n`)
+    console.log(`\u00A0Creating one more proposal...\n`)
 
     // Create one more proposal
     transaction = await dao.connect(investor1).createProposal(`Proposal 4`, ether(100), recipient.address)
@@ -93,7 +94,7 @@ async function main() {
     transaction = await dao.connect(investor3).vote(4)
     await transaction.wait()
 
-    console.log(`Finished.\n`)
+    console.log(`\u00A0\u00A0✓ Finished ✓\n`)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

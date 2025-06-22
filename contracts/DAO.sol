@@ -148,4 +148,9 @@ contract DAO {
         emit Finalize(_id);
     }
 
+    // Check if an investor has voted on a specific proposal
+    function hasVoted(address _investor, uint256 _id) public view returns (bool) {
+        return votes[_investor][_id];
+    }
+
 }

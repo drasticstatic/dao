@@ -76,7 +76,12 @@ function App() {
     <Container>
       <Navigation account={account} />
 
-      <h1 className='my-4 text-center'>Welcome to our DAO!</h1>
+      <div className="text-center my-4">
+        <h1 className='mb-2'>Welcome to our DAO!</h1>
+        <p className="text-muted">
+          A Decentralized Autonomous Organization where token holders vote on funding proposals
+        </p>
+      </div>
 
       {isLoading ? (
         <Loading />

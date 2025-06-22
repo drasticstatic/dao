@@ -1,3 +1,5 @@
+// ========== PROPOSALS.JS ==========
+
 // Import necessary React hooks and Bootstrap components
 import { useState, useEffect } from 'react';
 import Table from 'react-bootstrap/Table';
@@ -21,28 +23,74 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
   // State variables to track UI states and user data
   const [votingProposalId, setVotingProposalId] = useState(null); // Tracks which proposal is being voted on
   const [finalizingProposalId, setFinalizingProposalId] = useState(null); // Tracks which proposal is being finalized
-  const [userVotes, setUserVotes] = useState({}); // Stores which proposals the user has voted on
+  
+  const [userVotes, setUserVotes] = useState({});/* Vote tracking with state:
+    we use this to store votes from blockchain verification
+      being more reliable than localStorage as it's always in sync with the blockchain*/
+  
   const [recipientBalances, setRecipientBalances] = useState({}); // Stores recipient address balances
+  
+  useEffect(() => {
+    console.log('Current userVotes state:', userVotes);
+  }, [userVotes]);// Log userVotes whenever it changes
+  
+  /* MetaMask Account Change Detection
+      A listener to automatically refresh the UI when the user switches accounts
+        Improves UX by eliminating the need for manual page refresh*/
+  useEffect(() => {
+    if (window.ethereum) {
+      const handleAccountsChanged = (accounts) => {
+        console.log('MetaMask account changed:', accounts[0]);
+        // Refresh data when account changes
+        setIsLoading(true);
+      };
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      
+      return () => {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      };// Cleanup listener when component unmounts
+    }
+  }, [setIsLoading]);
 
-  // Effect hook to fetch user data and check voted proposals when component loads or dependencies change
+  /* Blockchain Vote Verification
+      This hook fetches both recipient balances and verifies votes directly from the blockchain
+        using dao.hasVoted() ensures UI accurately reflects on-chain voting state
+        being more reliable than localStorage or local state alone*/
   useEffect(() => {
     const fetchData = async () => {
       if (provider && dao && proposals) {
         try {
-          // Initialize all proposals as not voted
-          const votedProposals = {};
-          const balances = {};
+          // Get current user address
+          const signer = await provider.getSigner();
+          const userAddress = await signer.getAddress();
           
-          // Get balances for all recipients
+          // Initialize balances object and votes object
+          const balances = {};
+          const votesStatus = {};
+          
+          // Get balances for all recipients and check user votes
           for (const proposal of proposals) {
-            votedProposals[proposal.id.toString()] = false;
-            
             // Fetch recipient balance
             const balance = await provider.getBalance(proposal.recipient);
             balances[proposal.recipient] = ethers.utils.formatEther(balance);
+            
+            // Check if user has voted on this proposal
+            try {
+              const hasVoted = await dao.hasVoted(userAddress, proposal.id);
+              votesStatus[proposal.id.toString()] = hasVoted;
+              console.log(`User has voted on proposal ${proposal.id}: ${hasVoted}`);
+            } catch (error) {
+              console.error(`Error checking vote for proposal ${proposal.id}:`, error);
+              votesStatus[proposal.id.toString()] = false;
+            }
           }
-          setUserVotes(votedProposals);
+          
+          // Update recipient balances
           setRecipientBalances(balances);
+          
+          // Update user votes
+          setUserVotes(votesStatus);
+          
         } catch (error) {
           console.error("Error fetching data:", error);
         }
@@ -51,44 +99,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
     fetchData();
   }, [provider, dao, proposals]);
 
-  /**
-   * Handle voting on a proposal
-   * 
-   * @param {BigNumber} id - The ID of the proposal to vote on
-   */
-  const voteHandler = async (id) => {
-    console.log('Casting vote...\n' + 
-                 'Proposal ID: ' + id.toString() + '\n' +
-                 '----------------------------------------');
-    
-    // Update UI to show loading state for this specific proposal
-    setVotingProposalId(id);
-    
-    try {
-      const signer = await provider.getSigner();// Get the signer (connected wallet) to send the transaction
-      
-      const transaction = await dao.connect(signer).vote(id);// Call the vote function on the DAO contract
-      // This will add the user's token balance to the proposal's vote count
-      await transaction.wait();// Wait for the transaction to be mined
-      
-      // Update local state to show user has voted on this proposal
-        // This is important since we can't directly query the votes mapping
-      setUserVotes(prev => ({...prev, [id.toString()]: true}));
-    } catch (error) {
-      console.error("Error voting:", error);// Handle different types of errors with specific messages
-      if (error.reason) {
-        window.alert(`Transaction failed: ${error.reason}`);// Smart contract revert reason
-      } else if (error.message) {
-        window.alert(`Error: ${error.message}`);// General error message
-      } else {
-        window.alert('User rejected or transaction reverted');// Fallback error message
-      }
-    }
-
-    // Reset loading state and trigger parent component to refresh data
-    setVotingProposalId(null);
-    setIsLoading(true);
-  }
+  // ***** Vote handling is now done directly in the onClick handler of each button
 
   /**
    * Handle finalizing a proposal that has reached quorum
@@ -141,11 +152,11 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
    */
   const getStatusBadge = (proposal) => {
     if (proposal.finalized) {
-      return <Badge bg="success">Approved</Badge>;// Green badge for approved and finalized proposals
+      return <Badge bg="success" style={{ fontSize: '0.9rem', padding: '0.5rem' }}><small>✓</small> &nbsp;Approved&nbsp; <small>✓</small></Badge>;
     } else if (proposal.votes >= quorum) {
-      return <Badge bg="warning">Ready to Finalize</Badge>;// Yellow badge for proposals that reached quorum but aren't finalized
+      return <Badge bg="warning" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>Ready to Finalize <big>🤩</big></Badge>;
     } else {
-      return <Badge bg="info">In Progress</Badge>;// Blue badge for proposals still collecting votes
+      return <Badge bg="info" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>In Progress <big>😁</big></Badge>;
     }
   };
 
@@ -156,15 +167,32 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
    * @param {BigNumber} quorumValue - Quorum threshold required
    * @returns {JSX.Element} - Progress bar with vote information
    */
+
+  /* Number Formatting
+      This function formats large numbers with K/M/B/T notation for better readability
+        & provides tooltips to show exact values on hover*/
   const getVoteProgress = (votes, quorumValue) => {
-    // Calculate percentage of votes compared to quorum
-    const percentage = (votes / quorumValue) * 100;
+    const percentage = (votes / quorumValue) * 100;// Calculate percentage of votes compared to quorum
+    
+    // Format vote count in Ether format for easier reading
+    const formatVoteCount = (count) => {
+      const etherValue = Number(ethers.utils.formatEther(count));
+      if (etherValue >= 1000) {
+        return (etherValue / 1000).toFixed(1) + 'K ETH';
+      }
+      return etherValue.toFixed(1) + ' ETH';
+    };
     
     return (
       <div>
         {/* Vote count and percentage display */}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <small>{ethers.utils.formatUnits(votes, 0)} votes</small>
+          <OverlayTrigger
+            placement="top"
+            overlay={<Tooltip>{ethers.utils.formatUnits(votes, 0)} tokens</Tooltip>}
+          >
+            <small>{formatVoteCount(votes)}</small>
+          </OverlayTrigger>
           <small><strong>{Math.min(100, Math.round(percentage))}% of quorum</strong></small>
         </div>
         
@@ -190,9 +218,62 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
 
   return (
     <>
-      {/* Component header with title and quorum information */}
-      <h4 className="mb-3">Governance Proposals</h4>
-      <p className="text-muted">Quorum required: {ethers.utils.formatUnits(quorum, 0)} votes</p>
+      {/* Component header with title, quorum information, and debug buttons */}
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 className="mb-1">Governance Proposals</h4>
+          <p className="text-muted mb-0" style={{ paddingLeft: '20px' }}>
+            <small>Quorum required: {'> '}</small>
+            <OverlayTrigger
+              placement="top"
+              overlay={<Tooltip>{ethers.utils.formatEther(quorum)} ETH (exact value)</Tooltip>}
+            >
+              <span><small>
+                {(() => {
+                  const value = Number(ethers.utils.formatEther(quorum));
+                  
+                  // Option 3: K/M/B/T notation
+                  if (value >= 1e12) return (value / 1e12).toFixed(1) + 'T ETH';
+                  if (value >= 1e9) return (value / 1e9).toFixed(1) + 'B ETH';
+                  if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M ETH';
+                  if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K ETH';
+                  return value.toFixed(1) + ' ETH';
+                })()}</small>
+              </span>
+            </OverlayTrigger>
+          </p>
+        </div>
+        
+        {/* Debugging Tools
+              buttons to help developers troubleshoot blockchain interaction issues
+              providing console logging and state manipulation for testing
+        */}
+        <div>
+          <Button 
+            variant="outline-secondary" 
+            size="sm" 
+            className="me-2"
+            onClick={() => {
+              console.log('Current vote state:', userVotes);
+              alert('Check console for vote state');
+            }}
+          >
+            Debug: Check Vote State
+          </Button>
+          
+          <Button 
+            variant="outline-danger" 
+            size="sm" 
+            onClick={() => {
+              setUserVotes({});
+              console.log('Cleared local vote state (blockchain votes remain)');
+              alert('Local vote state cleared. Note: Your votes are still recorded on the blockchain.');
+            }}
+          >
+            Debug: Clear Vote State
+          </Button>
+        </div>
+      </div>
       
       {/* Responsive table to display all proposals */}
       <Table striped bordered hover responsive>
@@ -253,23 +334,70 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                 {/* Now using JSX 'getStatusBadge'function to determine and display status with color-coded badge */}
                 {/* ↓ */}
               {/* Status badge (color-coded) */}
-              <td>{getStatusBadge(proposal)}</td>
+              <td className="text-center">{getStatusBadge(proposal)}</td>
               
               {/* Vote progress bar */}
               <td>{getVoteProgress(proposal.votes, quorum)}</td>
               
               {/* Action buttons (vote, finalize) based on proposal state */}
               <td>
-                <div className="d-flex gap-2">
-                  {/* Vote button - only shown if proposal is not finalized and user hasn't voted */}
+                <div className="d-flex gap-2 justify-content-center">
+                  {/* Vote button - only show if user hasn't voted */}
                   {!proposal.finalized && !userVotes[proposal.id.toString()] && (
                     <Button
                       variant="primary"
                       size="sm"
+                      style={{ width: proposal.votes < quorum ? '100%' : 'auto' }}
                       disabled={votingProposalId === proposal.id}
-                      onClick={() => voteHandler(proposal.id)}
+                      onClick={async () => {
+                        const proposalId = proposal.id.toString();
+                        console.log(`Attempting to vote on proposal ${proposalId}...`);
+                        
+                        // Show loading state
+                        setVotingProposalId(proposal.id);
+                        
+                        try {
+                          // Call the blockchain transaction
+                          const signer = await provider.getSigner();
+                          const userAddress = await signer.getAddress();
+                          console.log(`User address: ${userAddress}`);
+                          
+                          // Call the vote function on the contract
+                          console.log('Calling vote function on contract...');
+                          const transaction = await dao.connect(signer).vote(proposal.id);
+                          console.log('Transaction sent:', transaction.hash);
+                          
+                          // Wait for transaction to be mined
+                          console.log('Waiting for transaction confirmation...');
+                          const receipt = await transaction.wait();
+                          console.log('Transaction confirmed:', receipt);
+                          
+                          // Update vote state after successful transaction
+                          console.log('Transaction successful, updating UI state');
+                          
+                          // Update local state to reflect the vote
+                          const newVotes = {...userVotes};
+                          newVotes[proposalId] = true;
+                          setUserVotes(newVotes);
+                          console.log(`Vote recorded for proposal ${proposalId}`);
+
+                        // Error Handling:
+                        } catch (error) {
+                          console.error('Error voting:', error);
+                          if (error.reason) {
+                            window.alert(`Transaction failed: ${error.reason}`);
+                          } else if (error.message) {
+                            window.alert(`Error: ${error.message}`);
+                          } else {
+                            window.alert('User rejected or transaction reverted');
+                          }
+                        }
+                        
+                        // Reset loading state and refresh data
+                        setVotingProposalId(null);
+                        setIsLoading(true);
+                      }}
                     >
-                      {/* Show spinner when voting is in progress */}
                       {votingProposalId === proposal.id ? (
                         <><Spinner as="span" animation="border" size="sm" /> Voting...</>
                       ) : (
@@ -278,14 +406,24 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                     </Button>
                   )}
                   
-                  {/* "Voted" badge - shown if user has already voted on this proposal */}
-                  {userVotes[proposal.id.toString()] && !proposal.finalized && (
-                    <OverlayTrigger
-                      placement="top"
-                      overlay={<Tooltip>You've already voted on this proposal</Tooltip>}
-                    >
-                      <Badge bg="secondary">Voted</Badge>
-                    </OverlayTrigger>
+                  {/* Voted badge */}
+                  {!proposal.finalized && userVotes[proposal.id.toString()] && (
+                    <div className="d-flex align-items-center justify-content-center" style={{ height: '100%' }}>
+                      {/* Enhanced badge with proper text wrapping and sizing
+                          Uses maxWidth, wordBreak and hyphens for reliable text wrapping
+                          Ensures consistent appearance across different screen sizes
+                      */}
+                      <Badge bg="secondary" style={{ 
+                        whiteSpace: 'normal', 
+                        textAlign: 'center',
+                        maxWidth: '80px',
+                        wordBreak: 'break-word',
+                        hyphens: 'auto',
+                        padding: '0.5rem'
+                      }}>
+                        Already Voted
+                      </Badge>
+                    </div>
                   )}
                   
                   {/* Finalize button - only shown if proposal has reached quorum but isn't finalized */}
@@ -307,12 +445,14 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                   
                   {/* "Completed" badge - shown if proposal is finalized */}
                   {proposal.finalized && (
-                    <OverlayTrigger
-                      placement="top"
-                      overlay={<Tooltip>This proposal has been approved and funds have been transferred</Tooltip>}
-                    >
-                      <Badge bg="success">Completed</Badge>
-                    </OverlayTrigger>
+                    <div className="text-center w-100">
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={<Tooltip>This proposal has been approved and funds have been transferred</Tooltip>}
+                      >
+                        <Badge bg="success" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>Completed&nbsp; <big>✅</big></Badge>
+                      </OverlayTrigger>
+                    </div>
                   )}
                 </div>
               </td>
