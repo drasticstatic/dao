@@ -264,6 +264,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
           <Button 
             variant="outline-danger" 
             size="sm" 
+            className="me-2"
             onClick={() => {
               setUserVotes({});
               console.log('Cleared local vote state (blockchain votes remain)');
@@ -271,6 +272,43 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
             }}
           >
             Debug: Clear Vote State
+          </Button>
+          
+          <Button 
+            variant="outline-info" 
+            size="sm" 
+            onClick={async () => {
+              console.log('Manually reloading blockchain data...');
+              
+              try {
+                // Get current user address
+                const signer = await provider.getSigner();
+                const userAddress = await signer.getAddress();
+                console.log(`Current user: ${userAddress}`);
+                
+                // Check votes for all proposals
+                const votesStatus = {};
+                for (const proposal of proposals) {
+                  try {
+                    const hasVoted = await dao.hasVoted(userAddress, proposal.id);
+                    votesStatus[proposal.id.toString()] = hasVoted;
+                    console.log(`User has voted on proposal ${proposal.id}: ${hasVoted}`);
+                  } catch (error) {
+                    console.error(`Error checking vote for proposal ${proposal.id}:`, error);
+                  }
+                }
+                
+                // Update user votes
+                setUserVotes(votesStatus);
+                console.log('Blockchain data reload complete');
+                alert('Blockchain data reloaded. Check console for details.');
+              } catch (error) {
+                console.error('Error reloading blockchain data:', error);
+                alert('Error reloading blockchain data. Check console for details.');
+              }
+            }}
+          >
+            Debug: Reload Blockchain Data
           </Button>
         </div>
       </div>
