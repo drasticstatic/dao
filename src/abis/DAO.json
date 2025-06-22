@@ -25,6 +25,19 @@
         "type": "uint256"
       }
     ],
+    "name": "Cancel",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
     "name": "Finalize",
     "type": "event"
   },
@@ -95,6 +108,19 @@
     ],
     "name": "Vote",
     "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_id",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelProposal",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
@@ -275,6 +301,11 @@
       {
         "internalType": "bool",
         "name": "finalized",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "cancelled",
         "type": "bool"
       }
     ],

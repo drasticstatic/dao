@@ -23,6 +23,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
   // State variables to track UI states and user data
   const [votingProposalId, setVotingProposalId] = useState(null); // Tracks which proposal is being voted on
   const [finalizingProposalId, setFinalizingProposalId] = useState(null); // Tracks which proposal is being finalized
+  const [cancellingProposalId, setCancellingProposalId] = useState(null); // Tracks which proposal is being cancelled
   
   const [userVotes, setUserVotes] = useState({});/* Vote tracking with state:
     we use this to store votes from blockchain verification
@@ -151,13 +152,48 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
    * @returns {JSX.Element} - Badge component with appropriate color and text
    */
   const getStatusBadge = (proposal) => {
-    if (proposal.finalized) {
+    if (proposal.cancelled) {
+      return <Badge bg="danger" style={{ fontSize: '0.9rem', padding: '0.5rem' }}><small>✗</small> &nbsp;Cancelled&nbsp; <small>✗</small></Badge>;
+    } else if (proposal.finalized) {
       return <Badge bg="success" style={{ fontSize: '0.9rem', padding: '0.5rem' }}><small>✓</small> &nbsp;Approved&nbsp; <small>✓</small></Badge>;
     } else if (proposal.votes >= quorum) {
       return <Badge bg="warning" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>Ready to Finalize <big>🤩</big></Badge>;
+    } else if (proposal.negativeVotes >= quorum) {
+      return <Badge bg="danger" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>Ready to Cancel <big>😞</big></Badge>;
     } else {
       return <Badge bg="info" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>In Progress <big>😁</big></Badge>;
     }
+  };
+  
+  /**
+   * Handle cancelling a proposal when against votes reach quorum
+   * 
+   * @param {BigNumber} id - The ID of the proposal to cancel
+   */
+  const cancelHandler = async (id) => {
+    console.log('Cancelling proposal...\\n' + 
+                 'Proposal ID: ' + id.toString() + '\\n' +
+                 '----------------------------------------');
+                 
+    // Update UI to show loading state for this specific proposal
+    setCancellingProposalId(id);
+    
+    try {
+      const signer = await provider.getSigner();
+      const transaction = await dao.connect(signer).cancelProposal(id);
+      await transaction.wait();
+    } catch (error) {
+      console.error("Error cancelling:", error);
+      if (error.reason) {
+        window.alert(`Transaction failed: ${error.reason}`);
+      } else if (error.message) {
+        window.alert(`Error: ${error.message}`);
+      } else {
+        window.alert('User rejected or transaction reverted');
+      }
+    }
+    setCancellingProposalId(null);
+    setIsLoading(true);
   };
 
 
@@ -290,7 +326,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
             {/*Created a Copy of the Proposals Array using the spread operator [...proposals] to create a new arra to avoidmutating the original array which could cause side effects*/}
             {/* ↓ */}
             {[...proposals].reverse().map((proposal, index) => (
-            <tr key={index}>
+            <tr key={index} className="align-middle">
               {/* ↑ React requires a unique key for each element/child in a list */}
 
               {/* Proposal ID */}
@@ -377,8 +413,8 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
               {/* Action buttons (vote, finalize) based on proposal state */}
               <td>
                 <div className="d-flex gap-2 justify-content-center">
-                  {/* Vote buttons - only show if user hasn't voted */}
-                  {!proposal.finalized && !userVotes[proposal.id.toString()] && (
+                  {/* Vote buttons - only show if user hasn't voted and proposal isn't cancelled */}
+                  {!proposal.finalized && !proposal.cancelled && !userVotes[proposal.id.toString()] && (
                     <div className="d-flex gap-1">
                       <Button
                         variant="success"
@@ -522,8 +558,8 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                     </div>
                   )}
                   
-                  {/* Voted badge */}
-                  {!proposal.finalized && userVotes[proposal.id.toString()] && (
+                  {/* Voted badge - only show if user has voted and proposal isn't cancelled */}
+                  {!proposal.finalized && !proposal.cancelled && userVotes[proposal.id.toString()] && (
                     <div className="d-flex align-items-center justify-content-center" style={{ height: '100%' }}>
                       {/* Enhanced badge with proper text wrapping and sizing
                           Uses maxWidth, wordBreak and hyphens for reliable text wrapping
@@ -541,20 +577,62 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                       </Badge>
                     </div>
                   )}
+
+                  {/*Added !proposal.cancelled condition to the vote buttons section to hide them when a proposal is cancelled
+                      Added !proposal.cancelled condition to the "Already Voted" badge to hide it when a proposal is cancelled
+                      Added a new "Voting Closed" badge that appears in the actions column when a proposal is cancelled
+                        This ensures that when a proposal is cancelled:
+                          The vote buttons are hidden
+                          The "Already Voted" badge is hidden
+                          A "Voting Closed" badge is shown instead*/}
+
+                  {/* Cancelled badge in actions column */}
+                  {proposal.cancelled && (
+                    <div className="d-flex align-items-center justify-content-center" style={{ height: '100%' }}>
+                      <Badge bg="danger" style={{ 
+                        whiteSpace: 'normal', 
+                        textAlign: 'center',
+                        maxWidth: '80px',
+                        wordBreak: 'break-word',
+                        hyphens: 'auto',
+                        padding: '0.5rem'
+                      }}>
+                        Voting Closed
+                      </Badge>
+                    </div>
+                  )}
                   
-                  {/* Finalize button - only shown if proposal has reached quorum but isn't finalized */}
-                  {!proposal.finalized && proposal.votes >= quorum && (/* If proposal is not finalized and has more than the quorum of votes, show "finalize" button */
+                  {/* Finalize button - only shown if positive votes have reached quorum but proposal isn't finalized or cancelled */}
+                  {!proposal.finalized && !proposal.cancelled && proposal.positiveVotes >= quorum && (
                     <Button
                       variant="success"
                       size="sm"
                       disabled={finalizingProposalId === proposal.id}
                       onClick={() => finalizeHandler(proposal.id)}
                     >
-                      {/* Show spinner when finalizing is in progress */}
                       {finalizingProposalId === proposal.id ? (
                         <><Spinner as="span" animation="border" size="sm" /> Finalizing...</>
                       ) : (
                         'Finalize'
+                      )}
+                    </Button>
+                  )}
+
+                  {/*now checking proposal.positiveVotes >= quorum for the finalize button and proposal.negativeVotes >= quorum for the cancel button, rather than checking proposal.votes >= quorum which is the net votes*/}
+                    {/*This ensures that the buttons appear when the respective vote counts reach the quorum threshold, regardless of the net vote count.*/}
+
+                  {/* Cancel button - only shown if negative votes have reached quorum but proposal isn't finalized or cancelled */}
+                  {!proposal.finalized && !proposal.cancelled && proposal.negativeVotes >= quorum && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={cancellingProposalId === proposal.id}
+                      onClick={() => cancelHandler(proposal.id)}
+                    >
+                      {cancellingProposalId === proposal.id ? (
+                        <><Spinner as="span" animation="border" size="sm" /> Cancelling...</>
+                      ) : (
+                        'Cancel'
                       )}
                     </Button>
                   )}

@@ -20,6 +20,7 @@ contract DAO {
         uint256 positiveVotes; // votes in favor
         uint256 negativeVotes; // votes against
         bool finalized; // flag to indicate if the proposal has been finalized true/false
+        bool cancelled; // flag to indicate if the proposal has been cancelled
     }
 
     // Remember: Mapping allows us to store data on the blockchain by key-value pair relationships
@@ -47,6 +48,7 @@ contract DAO {
     );
     event Vote(uint256 id, address investor, bool inFavor);
     event Finalize(uint256 id);
+    event Cancel(uint256 id);
 
     constructor(Token _token, uint256 _quorum) {
         owner = msg.sender;
@@ -99,7 +101,8 @@ contract DAO {
             0, // initial net votes are 0
             0, // initial positive votes are 0
             0, // initial negative votes are 0
-            false // 'not finalized' when initially created
+            false, // 'not finalized' when initially created
+            false  // 'not cancelled' when initially created
         );
 
         emit Propose(
@@ -164,8 +167,9 @@ contract DAO {
         // Fetch proposal from mapping by id
         Proposal storage proposal = proposals[_id];// 'storage' keyword allows us to modify the proposal in the mapping
 
-        // Ensure proposal is not already finalized
+        // Ensure proposal is not already finalized or cancelled
         require(proposal.finalized == false, "proposal already finalized");
+        require(proposal.cancelled == false, "proposal was cancelled");
 
         // Mark proposal as finalized
         proposal.finalized = true;
@@ -183,6 +187,25 @@ contract DAO {
         // Emit event
         emit Finalize(_id);
     }
+    
+    // Cancel proposal when against votes reach quorum
+    function cancelProposal(uint256 _id) external onlyInvestor {
+        // Fetch proposal from mapping by id
+        Proposal storage proposal = proposals[_id];
+        
+        // Ensure proposal is not already finalized or cancelled
+        require(proposal.finalized == false, "proposal already finalized");
+        require(proposal.cancelled == false, "proposal already cancelled");
+        
+        // Check that against votes have reached quorum
+        require(proposal.negativeVotes >= quorum, "against votes must reach quorum to cancel proposal");
+        
+        // Mark proposal as cancelled
+        proposal.cancelled = true;
+        
+        // Emit event
+        emit Cancel(_id);
+    }
 
     // Check if an investor has voted on a specific proposal
     function hasVoted(address _investor, uint256 _id) public view returns (bool) {
@@ -198,5 +221,4 @@ contract DAO {
     function hasVotedAgainst(address _investor, uint256 _id) public view returns (bool) {
         return votes[_investor][_id] == -1;
     }
-
 }
