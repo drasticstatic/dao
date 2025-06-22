@@ -196,8 +196,6 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
     setIsLoading(true);
   };
 
-
-
   return (
     <>
       {/* Component header with title, quorum information, and debug buttons */}

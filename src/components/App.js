@@ -6,6 +6,7 @@ import { ethers } from 'ethers'
 import Navigation from './Navigation';
 import Create from './Create';
 import Proposals from './Proposals';
+import ProposalAnalytics from './ProposalAnalytics';
 import Loading from './Loading';
 
 // ABIs: Import your contract ABIs here
@@ -98,6 +99,11 @@ function App() {
           <p className='text-center'><strong>Treasury Balance:</strong> {treasuryBalance} ETH</p>
 
           <hr/>
+          
+          <ProposalAnalytics 
+            proposals={proposals}
+            quorum={quorum}
+          />
 
           <Proposals
             provider={provider}

@@ -184,5 +184,4 @@ Potential enhancements for the component:
 1. Make the DAO custody ERC-20 tokens instead of Ether - e.g. proposals are paid out in USDC
 2. Add ability to edit proposals before they are voted on
 3. Implement vote delegation
-4. Add proposal history and analytics
-5. Add animations for state transitions
+4. Add animations for state transitions
