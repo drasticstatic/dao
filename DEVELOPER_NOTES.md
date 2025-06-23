@@ -177,6 +177,26 @@ This provides immediate feedback to users when actions are in progress.
 5. **Local State Management**: Working around keeping mapping private in dao.sol
 6. **User Feedback**: Tooltips and visual cues for better UX
 
+## Enhanced Features
+
+The component has been enhanced with several new features:
+
+1. **Vote Against Functionality**: Users can now vote against proposals, not just in favor
+   - Added separate vote buttons for "For" and "Against"
+   - Updated contract to track positive and negative votes separately
+   - Modified UI to show both vote counts with separate progress bars
+
+2. **Proposal Cancellation**: Proposals can be cancelled when negative votes reach quorum
+   - Added cancel button that appears when negative votes reach quorum
+   - Added cancelled state to proposals with appropriate UI indicators
+   - Prevents further voting on cancelled proposals
+
+3. **Analytics Dashboard**: Added a ProposalAnalytics component that shows:
+   - Proposal status distribution (active/finalized/cancelled)
+   - Voting distribution (for/against)
+   - Quorum success rate
+   - Average participation metrics
+
 ## Future Improvements
 
 Potential enhancements for the component:
@@ -185,3 +205,5 @@ Potential enhancements for the component:
 2. Add ability to edit proposals before they are voted on
 3. Implement vote delegation
 4. Add animations for state transitions
+5. Add proposal filtering and sorting options
+6. Implement time-based voting periods

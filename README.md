@@ -1,118 +1,51 @@
-# DAO (Decentralized Autonomous Organization)
+# Enhanced DAO Governance Platform
 
-A blockchain-based governance system that allows token holders to create, vote on, and execute proposals for treasury fund allocation.
+A decentralized autonomous organization (DAO) where token holders can create, vote on, and finalize funding proposals.
 
-## Project Overview
+## Features
 
-This DAO (Decentralized Autonomous Organization) project is built using:
-- Solidity smart contracts (for the blockchain logic)
-- React.js (for the frontend interface)
-- Hardhat (for Ethereum development environment)
-- Ethers.js (for blockchain interactions)
+- **Token-Based Governance**: Only token holders can create proposals and vote
+- **Bidirectional Voting**: Vote in favor or against proposals
+- **Proposal Management**: Create, vote, finalize, or cancel proposals
+- **Analytics Dashboard**: View key metrics about proposal activity and voting patterns
+- **Responsive UI**: Mobile-friendly interface with fixed headers and clear visual indicators
 
-The DAO allows token holders to participate in the governance of a shared treasury. Only token holders can create proposals and vote on them. When a proposal reaches the required quorum, it can be finalized, transferring funds to the designated recipient.
+## Key Components
 
-## How It Works
+### Smart Contract Features
 
-1. **Create Proposal**: Token holders can create proposals specifying an amount and recipient
-2. **Vote**: Other token holders can vote on proposals
-3. **Reach Quorum**: Proposals need to reach a minimum number of votes (quorum)
-4. **Finalize**: Once quorum is reached, any token holder can finalize the proposal
-5. **Transfer Funds**: Upon finalization, funds are transferred to the recipient
+- **Token Integration**: Uses ERC-20 token for governance rights
+- **Vote Weighting**: Votes are weighted by token balance
+- **Quorum System**: Proposals require a minimum number of votes to be finalized
+- **Cancellation Mechanism**: Proposals can be cancelled if they receive enough negative votes
 
-## Smart Contracts
+### Frontend Features
 
-The project includes two main smart contracts:
-
-1. **Token.sol**: ERC-20 token contract that represents governance rights
-2. **DAO.sol**: The main DAO contract that handles proposals, voting, and fund transfers
-
-## Frontend Features
-
-The React frontend provides an intuitive interface for interacting with the DAO:
-
-- **Proposal Creation**: Form to create new proposals
-- **Proposal Listing**: Table showing all proposals with their status
-- **Voting Interface**: Buttons to vote on active proposals
-- **Finalization**: Ability to finalize proposals that reached quorum
-- **Visual Indicators**: Progress bars showing voting progress toward quorum
-
-## Recent UI Improvements
-
-The Proposals component has been enhanced with the following features:
-
-- **Progress Bars**: Visual representation of voting progress toward quorum
-- **Status Badges**: Color-coded badges showing proposal status (In Progress, Ready to Finalize, Approved)
-- **Loading States**: Spinners during blockchain transactions
-- **Tooltips**: Additional information on hover
-- **Address Formatting**: Shortened addresses with full address on hover
-- **Better Error Handling**: Detailed error messages from blockchain transactions
-- **Empty State Handling**: Clear message when no proposals exist
-
-### Latest Enhancements
-
-- **Blockchain Vote Verification**: Direct verification of votes using smart contract calls
-- **MetaMask Account Change Detection**: Automatic UI refresh when switching accounts
-- **Number Formatting**: K/M/B/T notation for large numbers with tooltips showing exact values
-- **Improved Badge Styling**: Better visual hierarchy with centered, properly sized badges
-- **Copyable Addresses**: Click-to-copy functionality for Ethereum addresses
-- **Connection Indicators**: Clear visual indicators of wallet connection status
-- **Responsive Layout**: Better organization of UI elements across different screen sizes
-- **Developer Tools**: Debug buttons and enhanced console logging for development
-
-## Technical Implementation Notes
-
-- **Vote Tracking**: Uses the contract's `hasVoted` function to verify votes directly from the blockchain
-- **Conditional Rendering**: UI elements change based on proposal state and user actions
-- **Blockchain Interactions**: Uses ethers.js to interact with the smart contracts
-- **Responsive Design**: Bootstrap components for a mobile-friendly interface
-- **Event Handling**: Listens for MetaMask account changes to refresh data automatically
-- **Number Formatting**: Smart formatting of large numbers with appropriate notation
-- **Error Handling**: Robust error handling for blockchain interactions with user feedback
+- **Real-time Updates**: UI reflects blockchain state changes
+- **Visual Progress Tracking**: Separate progress bars for votes in favor and against
+- **Analytics Dashboard**: Shows proposal status distribution, voting patterns, and participation metrics
+- **Responsive Design**: Works on desktop and mobile devices
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js and npm
-- MetaMask or another Ethereum wallet
-
-### Installation
-
 1. Clone the repository
-```shell
-git clone <repository-url>
-cd dao
-```
+2. Install dependencies: `npm install`
+3. Start local blockchain: `npx hardhat node`
+4. Deploy contracts: `npx hardhat run scripts/deploy.js --network localhost`
+5. Seed initial data: `npx hardhat run scripts/seed.js --network localhost`
+6. Start frontend: `npm run start`
 
-2. Install dependencies
-```shell
-npm install
-```
+## Usage
 
-3. Start a local Hardhat node
-```shell
-npx hardhat node
-```
+1. **Create Proposals**: Fill out the form at the top of the page
+2. **Vote on Proposals**: Use the "For" and "Against" buttons to cast your vote
+3. **Finalize Proposals**: When a proposal reaches quorum of positive votes, click "Finalize"
+4. **Cancel Proposals**: When a proposal reaches quorum of negative votes, click "Cancel"
+5. **View Analytics**: Check the analytics dashboard for insights on DAO activity
 
-4. Deploy the contracts
-```shell
-npx hardhat run scripts/deploy.js --network localhost
-```
+## Technical Details
 
-5. Seed the contracts with initial data
-```shell
-npx hardhat run scripts/seed.js --network localhost
-```
-
-6. Start the frontend
-```shell
-npm start
-```
-
-## Testing
-
-Run the test suite with:
-```shell
-npx hardhat test
-```# dao
+- Built with React, Ethers.js, and Hardhat
+- Uses Bootstrap for responsive UI components
+- Smart contracts written in Solidity
+- Implements EIP-712 for secure transaction signing
