@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Understanding Explicit Function Signatures in Solidity &amp; Ethers&period;js</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <h1 id="understanding-explicit-function-signatures-in-solidity--ethersjs">Understanding Explicit Function Signatures in Solidity &amp; Ethers.js</h1>
+<h2 id="the-problem-function-overloading">The Problem: Function Overloading</h2>
+<p>In our enhanced DAO contract, we have two <code>vote</code> functions with different signatures:</p>
+<pre><code class="language-solidity">// Function 1: Legacy vote (always votes in favor)
+function vote(uint256 _id) external onlyInvestor { ... }
+
+// Function 2: Enhanced vote (specify direction)
+function vote(uint256 _id, bool _inFavor) external onlyInvestor { ... }
+</code></pre>
+<p>This is called <strong>function overloading</strong> - multiple functions with the same name but different parameters.</p>
+<h2 id="the-challenge">The Challenge</h2>
+<p>When using ethers.js to call these functions, the library doesn't know which one you want:</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// ❌ This is ambiguous - which vote function?</span>
+dao.<span class="hljs-title function_">connect</span>(signer).<span class="hljs-title function_">vote</span>(<span class="hljs-number">1</span>)
+</code></pre>
+<p>Ethers.js throws an error: <code>dao.connect(...).vote is not a function</code></p>
+<h2 id="the-solution-explicit-function-signatures">The Solution: Explicit Function Signatures</h2>
+<p>We use bracket notation with the full function signature to specify exactly which function to call:</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✅ Calls: vote(uint256 _id)</span>
+dao.<span class="hljs-title function_">connect</span>(signer)[<span class="hljs-string">&quot;vote(uint256)&quot;</span>](<span class="hljs-number">1</span>)
+
+<span class="hljs-comment">// ✅ Calls: vote(uint256 _id, bool _inFavor)</span>
+dao.<span class="hljs-title function_">connect</span>(signer)[<span class="hljs-string">&quot;vote(uint256,bool)&quot;</span>](<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)
+</code></pre>
+<h2 id="how-function-signatures-work">How Function Signatures Work</h2>
+<h3 id="signature-format">Signature Format</h3>
+<pre><code>functionName(parameterType1,parameterType2,...)
+</code></pre>
+<h3 id="examples-from-our-contract">Examples from Our Contract</h3>
+<table>
+<thead>
+<tr>
+<th>Function Call</th>
+<th>Signature</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vote(1)</code></td>
+<td><code>&quot;vote(uint256)&quot;</code></td>
+<td><code>proposalId</code></td>
+</tr>
+<tr>
+<td><code>vote(1, true)</code></td>
+<td><code>&quot;vote(uint256,bool)&quot;</code></td>
+<td><code>proposalId, inFavor</code></td>
+</tr>
+<tr>
+<td><code>createProposal(...)</code></td>
+<td><code>&quot;createProposal(string,string,uint256,address)&quot;</code></td>
+<td><code>name, description, amount, recipient</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="real-examples-from-our-tests">Real Examples from Our Tests</h2>
+<h3 id="legacy-vote-in-favor">Legacy Vote (In Favor)</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// Test code</span>
+transaction = <span class="hljs-keyword">await</span> dao.<span class="hljs-title function_">connect</span>(investor1)[<span class="hljs-string">&quot;vote(uint256)&quot;</span>](<span class="hljs-number">1</span>)
+
+<span class="hljs-comment">// This calls the Solidity function:</span>
+<span class="hljs-comment">// function vote(uint256 _id) external onlyInvestor</span>
+</code></pre>
+<h3 id="enhanced-vote-specify-direction">Enhanced Vote (Specify Direction)</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// Vote in favor</span>
+transaction = <span class="hljs-keyword">await</span> dao.<span class="hljs-title function_">connect</span>(investor1)[<span class="hljs-string">&quot;vote(uint256,bool)&quot;</span>](<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)
+
+<span class="hljs-comment">// Vote against</span>
+transaction = <span class="hljs-keyword">await</span> dao.<span class="hljs-title function_">connect</span>(investor1)[<span class="hljs-string">&quot;vote(uint256,bool)&quot;</span>](<span class="hljs-number">1</span>, <span class="hljs-literal">false</span>)
+
+<span class="hljs-comment">// This calls the Solidity function:</span>
+<span class="hljs-comment">// function vote(uint256 _id, bool _inFavor) external onlyInvestor</span>
+</code></pre>
+<h2 id="why-this-happens">Why This Happens</h2>
+<h3 id="1-solidity-allows-function-overloading">1. Solidity Allows Function Overloading</h3>
+<pre><code class="language-solidity">contract Example {
+    function transfer(address to, uint256 amount) { ... }
+    function transfer(address to, uint256 amount, bytes data) { ... }
+}
+</code></pre>
+<h3 id="2-javascriptethersjs-needs-clarity">2. JavaScript/Ethers.js Needs Clarity</h3>
+<p>JavaScript doesn't have native function overloading, so ethers.js needs explicit instructions.</p>
+<h3 id="3-abi-application-binary-interface-contains-all-signatures">3. ABI (Application Binary Interface) Contains All Signatures</h3>
+<p>The contract's ABI includes both functions:</p>
+<pre><code class="language-json"><span class="hljs-punctuation">[</span>
+  <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;vote&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;inputs&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span><span class="hljs-attr">&quot;type&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;uint256&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;_id&quot;</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">]</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;vote&quot;</span><span class="hljs-punctuation">,</span> 
+    <span class="hljs-attr">&quot;inputs&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+      <span class="hljs-punctuation">{</span><span class="hljs-attr">&quot;type&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;uint256&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;_id&quot;</span><span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-punctuation">{</span><span class="hljs-attr">&quot;type&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;bool&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;name&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;_inFavor&quot;</span><span class="hljs-punctuation">}</span>
+    <span class="hljs-punctuation">]</span>
+  <span class="hljs-punctuation">}</span>
+<span class="hljs-punctuation">]</span>
+</code></pre>
+<h2 id="alternative-approaches">Alternative Approaches</h2>
+<h3 id="1-different-function-names-avoided-overloading">1. Different Function Names (Avoided Overloading)</h3>
+<pre><code class="language-solidity">function voteInFavor(uint256 _id) external { ... }
+function voteAgainst(uint256 _id) external { ... }
+</code></pre>
+<h3 id="2-single-function-with-required-parameter">2. Single Function with Required Parameter</h3>
+<pre><code class="language-solidity">function vote(uint256 _id, bool _inFavor) external { ... }
+// No overloading, always require both parameters
+</code></pre>
+<h3 id="3-using-contract-interface">3. Using Contract Interface</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// Create interface with specific function</span>
+<span class="hljs-keyword">const</span> voteInterface = <span class="hljs-keyword">new</span> ethers.<span class="hljs-property">utils</span>.<span class="hljs-title class_">Interface</span>([
+  <span class="hljs-string">&quot;function vote(uint256 _id, bool _inFavor)&quot;</span>
+]);
+</code></pre>
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="1-be-explicit-in-tests">1. Be Explicit in Tests</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✅ Clear and unambiguous</span>
+dao.<span class="hljs-title function_">connect</span>(investor1)[<span class="hljs-string">&quot;vote(uint256,bool)&quot;</span>](proposalId, <span class="hljs-literal">false</span>)
+
+<span class="hljs-comment">// ❌ Ambiguous</span>
+dao.<span class="hljs-title function_">connect</span>(investor1).<span class="hljs-title function_">vote</span>(proposalId, <span class="hljs-literal">false</span>)
+</code></pre>
+<h3 id="2-document-function-signatures">2. Document Function Signatures</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// Legacy vote function: vote(uint256)</span>
+<span class="hljs-keyword">const</span> legacyVote = dao.<span class="hljs-title function_">connect</span>(signer)[<span class="hljs-string">&quot;vote(uint256)&quot;</span>](proposalId);
+
+<span class="hljs-comment">// Enhanced vote function: vote(uint256,bool)  </span>
+<span class="hljs-keyword">const</span> enhancedVote = dao.<span class="hljs-title function_">connect</span>(signer)[<span class="hljs-string">&quot;vote(uint256,bool)&quot;</span>](proposalId, <span class="hljs-literal">true</span>);
+</code></pre>
+<h3 id="3-consistent-usage">3. Consistent Usage</h3>
+<p>Always use explicit signatures when function overloading exists, even if only one version is currently used.</p>
+<h2 id="summary">Summary</h2>
+<p>Explicit function signatures solve the ambiguity problem when:</p>
+<ul>
+<li>Multiple functions have the same name (overloading)</li>
+<li>Ethers.js needs to know which specific function to call</li>
+<li>You want to be explicit about which version you're using</li>
+</ul>
+<p>The syntax <code>[&quot;functionName(type1,type2)&quot;]</code> tells ethers.js exactly which function signature to use from the contract's ABI.</p>
+<h2 id="addendum-when-you-dont-need-explicit-signatures">Addendum: When You DON'T Need Explicit Signatures</h2>
+<h3 id="modern-approach-recommended">Modern Approach (Recommended)</h3>
+<p>After learning more in DAPP University, we discovered that explicit function signatures are <strong>only needed when there's ambiguity</strong>. If you're calling the enhanced function with both parameters, ethers.js can figure it out:</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✅ This works without explicit signatures</span>
+dao.<span class="hljs-title function_">connect</span>(user).<span class="hljs-title function_">vote</span>(<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)   <span class="hljs-comment">// Calls vote(uint256, bool)</span>
+dao.<span class="hljs-title function_">connect</span>(user).<span class="hljs-title function_">vote</span>(<span class="hljs-number">1</span>, <span class="hljs-literal">false</span>)  <span class="hljs-comment">// Calls vote(uint256, bool)</span>
+
+<span class="hljs-comment">// ❌ This is ambiguous and needs explicit signature</span>
+dao.<span class="hljs-title function_">connect</span>(user).<span class="hljs-title function_">vote</span>(<span class="hljs-number">1</span>)         <span class="hljs-comment">// Which vote function?</span>
+</code></pre>
+<h3 id="updated-test-pattern">Updated Test Pattern</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✅ Clean and readable</span>
+<span class="hljs-keyword">await</span> <span class="hljs-title function_">expect</span>(dao.<span class="hljs-title function_">connect</span>(user).<span class="hljs-title function_">vote</span>(<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)).<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;must be token holder&#x27;</span>)
+
+<span class="hljs-comment">// ❌ Unnecessarily verbose when parameters make it clear</span>
+<span class="hljs-keyword">await</span> <span class="hljs-title function_">expect</span>(dao.<span class="hljs-title function_">connect</span>(user)[<span class="hljs-string">&quot;vote(uint256,bool)&quot;</span>](<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)).<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;must be token holder&#x27;</span>)
+</code></pre>
+<h3 id="when-to-use-each-approach">When to Use Each Approach</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Approach</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ambiguous call</strong></td>
+<td>Explicit signature</td>
+<td><code>dao[&quot;vote(uint256)&quot;](1)</code></td>
+</tr>
+<tr>
+<td><strong>Clear parameters</strong></td>
+<td>Direct call</td>
+<td><code>dao.vote(1, true)</code></td>
+</tr>
+<tr>
+<td><strong>Better error testing</strong></td>
+<td>Direct call + revertedWith</td>
+<td><code>expect(dao.vote(1, true)).to.be.revertedWith('error')</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="key-takeaway">Key Takeaway</h3>
+<p>Use explicit function signatures only when necessary for disambiguation. When the parameters make the function call unambiguous, use the cleaner direct approach for better readability and more specific error testing.</p>
+<h2 id="benefits-of-revertedwith-vs-reverted">Benefits of .revertedWith() vs .reverted</h2>
+<h3 id="specific-error-testing">Specific Error Testing</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✅ Better - Tests exact error message</span>
+<span class="hljs-keyword">await</span> <span class="hljs-title function_">expect</span>(dao.<span class="hljs-title function_">connect</span>(user).<span class="hljs-title function_">vote</span>(<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>))
+  .<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;must be token holder&#x27;</span>)
+
+<span class="hljs-comment">// ❌ Less specific - Just tests that it reverts</span>
+<span class="hljs-keyword">await</span> <span class="hljs-title function_">expect</span>(dao.<span class="hljs-title function_">connect</span>(user).<span class="hljs-title function_">vote</span>(<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>))
+  .<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-property">reverted</span>
+</code></pre>
+<h3 id="why-revertedwith-is-superior">Why .revertedWith() is Superior</h3>
+<ol>
+<li><strong>Precise Testing</strong>: Verifies the exact error condition</li>
+<li><strong>Better Debugging</strong>: When tests fail, you know which specific error wasn't triggered</li>
+<li><strong>Catches Regressions</strong>: If error messages change, tests will fail</li>
+<li><strong>Documentation</strong>: Error messages serve as inline documentation</li>
+<li><strong>Contract Validation</strong>: Ensures your contract's error handling works as expected</li>
+</ol>
+<h3 id="common-error-messages-in-our-dao">Common Error Messages in Our DAO</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// Access control errors</span>
+.<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;must be token holder&#x27;</span>)
+
+<span class="hljs-comment">// State validation errors</span>
+.<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;already voted&#x27;</span>)
+.<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;proposal already finalized&#x27;</span>)
+.<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;proposal already cancelled&#x27;</span>)
+.<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;proposal was cancelled&#x27;</span>)
+
+<span class="hljs-comment">// Logic errors</span>
+.<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;must reach quorum to finalize proposal&#x27;</span>)
+.<span class="hljs-property">to</span>.<span class="hljs-property">be</span>.<span class="hljs-title function_">revertedWith</span>(<span class="hljs-string">&#x27;against votes must reach quorum to cancel proposal&#x27;</span>)
+</code></pre>
+<h2 id="final-addendum-when-explicit-signatures-are-actually-required">Final Addendum: When Explicit Signatures Are Actually Required</h2>
+<h3 id="the-reality-of-function-overloading">The Reality of Function Overloading</h3>
+<p>After implementing our enhanced DAO with function overloading, we discovered that explicit function signatures are <strong>not verbose</strong> - they're <strong>essential</strong> when you have overloaded functions.</p>
+<h3 id="our-contract-has-true-function-overloading">Our Contract Has True Function Overloading</h3>
+<pre><code class="language-solidity">// Two different functions with the same name
+function vote(uint256 _id) external onlyInvestor { ... }           // Legacy
+function vote(uint256 _id, bool _inFavor) external onlyInvestor { ... }  // Enhanced
+</code></pre>
+<h3 id="the-misconception-about-clean-calls">The Misconception About &quot;Clean&quot; Calls</h3>
+<p>We initially thought this would work:</p>
+<pre><code class="language-javascript"><span class="hljs-comment">// ❌ This DOESN&#x27;T work with function overloading</span>
+dao.<span class="hljs-title function_">connect</span>(user).<span class="hljs-title function_">vote</span>(<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)  <span class="hljs-comment">// &quot;dao.connect(...).vote is not a function&quot;</span>
+</code></pre>
+<p><strong>Why it fails</strong>: Ethers.js cannot determine which overloaded function to call, even with different parameter counts.</p>
+<h3 id="the-correct-approach">The Correct Approach</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// ✅ This WORKS - explicitly specifies which function</span>
+dao.<span class="hljs-title function_">connect</span>(user)[<span class="hljs-string">&quot;vote(uint256,bool)&quot;</span>](<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)
+
+<span class="hljs-comment">// ✅ This also works for the legacy function</span>
+dao.<span class="hljs-title function_">connect</span>(user)[<span class="hljs-string">&quot;vote(uint256)&quot;</span>](<span class="hljs-number">1</span>)
+</code></pre>
+<h3 id="key-insight-not-verbose-but-necessary">Key Insight: Not Verbose, But Necessary</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Approach</th>
+<th>Reality</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>No overloading</strong></td>
+<td><code>dao.vote(1, true)</code></td>
+<td>Works fine</td>
+</tr>
+<tr>
+<td><strong>With overloading</strong></td>
+<td><code>dao[&quot;vote(uint256,bool)&quot;](1, true)</code></td>
+<td><strong>Required, not verbose</strong></td>
+</tr>
+<tr>
+<td><strong>Ambiguous call</strong></td>
+<td><code>dao.vote(1)</code></td>
+<td><strong>Always needs explicit signature</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="practical-example-from-our-tests">Practical Example from Our Tests</h3>
+<pre><code class="language-javascript"><span class="hljs-comment">// This is the ONLY way that works with our overloaded functions</span>
+transaction = <span class="hljs-keyword">await</span> dao.<span class="hljs-title function_">connect</span>(investor1)[<span class="hljs-string">&quot;vote(uint256,bool)&quot;</span>](<span class="hljs-number">1</span>, <span class="hljs-literal">true</span>)
+
+<span class="hljs-comment">// This would fail:</span>
+<span class="hljs-comment">// transaction = await dao.connect(investor1).vote(1, true) // TypeError</span>
+</code></pre>
+<h3 id="when-you-actually-need-explicit-signatures">When You Actually Need Explicit Signatures</h3>
+<ol>
+<li><strong>Always with function overloading</strong> (like our DAO)</li>
+<li><strong>When the ABI contains multiple functions with the same name</strong></li>
+<li><strong>When ethers.js cannot resolve the function automatically</strong></li>
+</ol>
+<h3 id="the-bottom-line">The Bottom Line</h3>
+<p>Explicit function signatures aren't a &quot;verbose alternative&quot; - they're the <strong>only solution</strong> when you have function overloading. The syntax <code>[&quot;functionName(types)&quot;]</code> is the precise, technical way to specify exactly which function you want to call from the contract's ABI.</p>
+<p><strong>In our DAO</strong>: Every vote call MUST use explicit signatures because we have two vote functions. This is a requirement of the architecture, not a stylistic choice.</p>
+
+            
+            
+        </body>
+        </html>

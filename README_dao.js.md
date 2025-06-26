@@ -1,6 +1,6 @@
 # DAO.js Test Suite Documentation
 
-This document explains the DAO test suite (`test/DAO.js`) and how the quorum system works in our enhanced DAO implementation.
+This document explains the DAO test suite (`test/DAO.js`) and how the quorum system mechanics work in our enhanced DAO implementation.
 
 ## Test Setup Overview
 
@@ -144,3 +144,71 @@ positiveVotes = 600,000  // 3 × 200,000
 negativeVotes = 400,000  // 2 × 200,000
 votes = 200,000          // 600,000 - 400,000
 ```
+
+## Understanding Proposal IDs in Tests
+
+### How Proposal IDs Are Assigned
+```solidity
+uint256 public proposalCount; // Starts at 0
+
+function createProposal(...) {
+    proposalCount++; // Increment first (1, 2, 3...)
+    proposals[proposalCount] = Proposal(...); // Store at that ID
+}
+```
+
+### Test Isolation and ID Management
+
+Each test gets a fresh blockchain state, but within a single test:
+
+```javascript
+describe('Governance', () => {
+  beforeEach(async () => {
+    // Creates Proposal 1 for this test suite
+    transaction = await dao.connect(investor1).createProposal('Proposal 1', ...)
+  })
+  
+  it('rejects finalization of cancelled proposal', async () => {
+    // Need separate proposal to test cancellation scenario
+    // Creates Proposal 2 (proposalCount becomes 2)
+    transaction = await dao.connect(investor1).createProposal('Proposal 2', ...)
+    
+    // Work with proposalId=2 for this specific test
+    await dao.connect(investor1).vote(2, false)
+    await dao.connect(investor1).cancelProposal(2)
+    await expect(dao.connect(investor1).finalizeProposal(2))
+      .to.be.revertedWith('proposal was cancelled')
+  })
+})
+```
+
+### Why We Use Different Proposal IDs
+
+| Scenario | Proposal ID | Purpose |
+|----------|-------------|----------|
+| **Standard tests** | `1` | Use proposal from `beforeEach` |
+| **Isolation needed** | `2` | Create fresh proposal for specific test |
+| **Multiple proposals** | `1, 2, 3...` | Test interactions between proposals |
+
+### Best Practice Pattern
+```javascript
+// ✅ Good - Clear separation of concerns
+it('specific test scenario', async () => {
+  // Create dedicated proposal for this test
+  await dao.createProposal('Test Proposal', ...)
+  const newProposalId = await dao.proposalCount() // Get latest ID
+  
+  // Test specific scenario with clean state
+  await dao.vote(newProposalId, false)
+  await dao.cancelProposal(newProposalId)
+})
+
+// ❌ Avoid - Reusing proposals can cause test interdependence
+it('test that modifies existing proposal', async () => {
+  await dao.vote(1, true) // Modifies proposal from beforeEach
+  // This could affect other tests
+})
+```
+
+### Key Takeaway
+Using different proposal IDs (like proposalId=2) ensures test isolation and allows testing specific scenarios without interference from setup data. Each proposal ID represents a separate governance decision with its own voting history and state.

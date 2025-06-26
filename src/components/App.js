@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Container } from 'react-bootstrap'
+import { Container, Button, Alert } from 'react-bootstrap'
 import { ethers } from 'ethers'
 
 // Components
@@ -27,11 +27,28 @@ function App() {
   const [quorum, setQuorum] = useState(null)
 
   const [isLoading, setIsLoading] = useState(true)
+  const [walletConnected, setWalletConnected] = useState(false)
+
+  const connectWallet = async () => {
+    try {
+      await window.ethereum.request({ method: 'eth_requestAccounts' })
+      setWalletConnected(true)
+      setIsLoading(true)
+    } catch (error) {
+      console.error('Error connecting wallet:', error)
+    }
+  }
 
   const loadBlockchainData = async () => {
-    // Initiate provider
-    const provider = new ethers.providers.Web3Provider(window.ethereum)
-    setProvider(provider)
+    if (!window.ethereum) {
+      console.error('MetaMask not detected')
+      return
+    }
+
+    try {
+      // Initiate provider
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      setProvider(provider)
 
     // Initiate contracts
     const dao = new ethers.Contract(config[31337].dao.address, DAO_ABI, provider)
@@ -65,12 +82,36 @@ function App() {
     setQuorum(await dao.quorum())
 
     setIsLoading(false)
+    setWalletConnected(true)
+    } catch (error) {
+      console.error('Error loading blockchain data:', error)
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
-    if (isLoading) {
-      loadBlockchainData()
+    const checkWalletConnection = async () => {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+          if (accounts.length > 0) {
+            setWalletConnected(true)
+            if (isLoading) {
+              loadBlockchainData()
+            }
+          } else {
+            setIsLoading(false)
+          }
+        } catch (error) {
+          console.error('Error checking wallet connection:', error)
+          setIsLoading(false)
+        }
+      } else {
+        setIsLoading(false)
+      }
     }
+
+    checkWalletConnection()
   }, [isLoading]);
 
   return(
@@ -84,7 +125,22 @@ function App() {
         </p>
       </div>
 
-      {isLoading ? (
+      {!window.ethereum ? (
+        <Alert variant="warning" className="text-center">
+          <h4>MetaMask Required</h4>
+          <p>Please install MetaMask to use this DAO application.</p>
+        </Alert>
+      ) : !walletConnected ? (
+        <div className="text-center">
+          <Alert variant="info">
+            <h4>Connect Your Wallet</h4>
+            <p>Please connect your MetaMask wallet to interact with the DAO.</p>
+          </Alert>
+          <Button variant="primary" size="lg" onClick={connectWallet}>
+            Connect Wallet
+          </Button>
+        </div>
+      ) : isLoading ? (
         <Loading />
       ) : (
         <>

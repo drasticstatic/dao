@@ -113,9 +113,8 @@ describe('DAO', () => {
         await expect(dao.connect(investor1).createProposal('Proposal 1', 'Description', ether(1000), recipient.address)).to.be.reverted
       })
 
-
       it('reject non-investor', async () => {
-        await expect(dao.connect(user).createProposal('Proposal 1', 'Description', ether(100), recipient.address)).to.be.reverted
+        await expect(dao.connect(user).createProposal('Proposal 1', 'Description', ether(100), recipient.address)).to.be.revertedWith('must be token holder')
       })
     })
   })
@@ -132,7 +131,7 @@ describe('DAO', () => {
     describe('Success', () => {
 
       beforeEach(async () => {
-        transaction = await dao.connect(investor1)["vote(uint256)"](1)
+        transaction = await dao.connect(investor1)["vote(uint256,bool)"](1, true)
         result = await transaction.wait()
       })
 
@@ -151,15 +150,14 @@ describe('DAO', () => {
     describe('Failure', () => {
 
       it('reject non-investor', async () => {
-        await expect(dao.connect(user)["vote(uint256)"](1)).to.be.reverted
+        await expect(dao.connect(user)["vote(uint256,bool)"](1, true)).to.be.revertedWith('must be token holder')
       }) // user does not hold any tokens
 
-
       it('rejects double voting', async () => {
-        transaction = await dao.connect(investor1)["vote(uint256)"](1)
+        transaction = await dao.connect(investor1)["vote(uint256,bool)"](1, true)
         await transaction.wait()
 
-        await expect(dao.connect(investor1)["vote(uint256)"](1)).to.be.reverted
+        await expect(dao.connect(investor1)["vote(uint256,bool)"](1, true)).to.be.revertedWith('already voted')
       })
     })
   })
@@ -248,18 +246,18 @@ describe('DAO', () => {
         transaction = await dao.connect(investor1)["vote(uint256,bool)"](2, false)
         await transaction.wait()
 
-        await expect(dao.connect(investor1).cancelProposal(2)).to.be.reverted
+        await expect(dao.connect(investor1).cancelProposal(2)).to.be.revertedWith('against votes must reach quorum to cancel proposal')
       })
 
       it('rejects cancellation from non-investor', async () => {
-        await expect(dao.connect(user).cancelProposal(1)).to.be.reverted
+        await expect(dao.connect(user).cancelProposal(1)).to.be.revertedWith('must be token holder')
       })
 
       it('rejects cancellation if already cancelled', async () => {
         transaction = await dao.connect(investor1).cancelProposal(1)
         await transaction.wait()
 
-        await expect(dao.connect(investor1).cancelProposal(1)).to.be.reverted
+        await expect(dao.connect(investor1).cancelProposal(1)).to.be.revertedWith('proposal already cancelled')
       })
 
     })
@@ -277,13 +275,13 @@ describe('DAO', () => {
         result = await transaction.wait()
 
         // Vote
-        transaction = await dao.connect(investor1)["vote(uint256)"](1)
+        transaction = await dao.connect(investor1)["vote(uint256,bool)"](1, true)
         result = await transaction.wait()
 
-        transaction = await dao.connect(investor2)["vote(uint256)"](1)
+        transaction = await dao.connect(investor2)["vote(uint256,bool)"](1, true)
         result = await transaction.wait()
 
-        transaction = await dao.connect(investor3)["vote(uint256)"](1)
+        transaction = await dao.connect(investor3)["vote(uint256,bool)"](1, true)
         result = await transaction.wait()
 
         // Finalize proposal
@@ -315,29 +313,28 @@ describe('DAO', () => {
         result = await transaction.wait()
 
         // Vote
-        transaction = await dao.connect(investor1)["vote(uint256)"](1)
+        transaction = await dao.connect(investor1)["vote(uint256,bool)"](1, true)
         result = await transaction.wait()
 
-        transaction = await dao.connect(investor2)["vote(uint256)"](1)
+        transaction = await dao.connect(investor2)["vote(uint256,bool)"](1, true)
         result = await transaction.wait()
       })
 
-
       it('rejects finalization if not enough votes', async () => {
-        await expect(dao.connect(investor1).finalizeProposal(1)).to.be.reverted
+        await expect(dao.connect(investor1).finalizeProposal(1)).to.be.revertedWith('must reach quorum to finalize proposal')
       })
 
       it('rejects finalization from a non-investor', async () => {
         // Vote 3
-        transaction = await dao.connect(investor3)["vote(uint256)"](1)
+        transaction = await dao.connect(investor3)["vote(uint256,bool)"](1, true)
         result = await transaction.wait()
 
-        await expect(dao.connect(user).finalizeProposal(1)).to.be.reverted
+        await expect(dao.connect(user).finalizeProposal(1)).to.be.revertedWith('must be token holder')
       })
 
       it('rejects proposal if already finalized', async () => {
         // Vote 3
-        transaction = await dao.connect(investor3)["vote(uint256)"](1)
+        transaction = await dao.connect(investor3)["vote(uint256,bool)"](1, true)
         result = await transaction.wait()
 
         // Finalize
@@ -345,7 +342,7 @@ describe('DAO', () => {
         result = await transaction.wait()
 
         // Try to finalize again
-        await expect(dao.connect(investor1).finalizeProposal(1)).to.be.reverted
+        await expect(dao.connect(investor1).finalizeProposal(1)).to.be.revertedWith('proposal already finalized')
       })
 
       it('rejects finalization of cancelled proposal', async () => {
@@ -366,7 +363,7 @@ describe('DAO', () => {
         await transaction.wait()
 
         // Try to finalize cancelled proposal
-        await expect(dao.connect(investor1).finalizeProposal(2)).to.be.reverted
+        await expect(dao.connect(investor1).finalizeProposal(2)).to.be.revertedWith('proposal was cancelled')
       })
 
     })
