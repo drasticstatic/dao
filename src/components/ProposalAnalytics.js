@@ -35,77 +35,96 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
       <Row className="g-3">
         <Col md={6} lg={3}>
           <Card className="h-100">
-            <Card.Body>
+            <Card.Body className="d-flex flex-column">
               <Card.Title className="fs-6">Proposal Status</Card.Title>
               <div className="d-flex justify-content-between mb-1">
                 <small>Active: {activeProposals}</small>
                 <small>Finalized: {finalizedProposals}</small>
               </div>
-              <div className="d-flex justify-content-between mb-2">
+              <div className="d-flex justify-content-between mb-3">
                 <small>Cancelled: {cancelledProposals}</small>
                 <small>Total: {totalProposals}</small>
               </div>
-              <ProgressBar>
-                <ProgressBar variant="info" now={(activeProposals/totalProposals)*100} key={1} />
-                <ProgressBar variant="success" now={(finalizedProposals/totalProposals)*100} key={2} />
-                <ProgressBar variant="danger" now={(cancelledProposals/totalProposals)*100} key={3} />
-              </ProgressBar>
+              <div className="mt-auto">
+                <ProgressBar>
+                  <ProgressBar variant="info" now={(activeProposals/totalProposals)*100} key={1} />
+                  <ProgressBar variant="success" now={(finalizedProposals/totalProposals)*100} key={2} />
+                  <ProgressBar variant="danger" now={(cancelledProposals/totalProposals)*100} key={3} />
+                </ProgressBar>
+                <div className="text-center mt-1">
+                  <small className="text-muted">
+                    {totalProposals > 0 ? 'Proposal distribution overview' : 'No proposals yet'}
+                  </small>
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>
         
         <Col md={6} lg={3}>
           <Card className="h-100">
-            <Card.Body>
+            <Card.Body className="d-flex flex-column">
               <Card.Title className="fs-6">Voting Distribution</Card.Title>
-              <div className="d-flex justify-content-between mb-1">
+              <div className="d-flex justify-content-between mb-3">
                 <small className="text-success">For: {totalPositiveVotes.toFixed(1)} ETH</small>
                 <small className="text-danger">Against: {totalNegativeVotes.toFixed(1)} ETH</small>
               </div>
-              <div className="d-flex justify-content-between mb-2">
-                <small className="text-success">{positivePercentage.toFixed(1)}%</small>
-                <small className="text-danger">{negativePercentage.toFixed(1)}%</small>
+              <div className="mt-auto">
+                <ProgressBar>
+                  <ProgressBar variant="success" now={positivePercentage} key={1} />
+                  <ProgressBar variant="danger" now={negativePercentage} key={2} />
+                </ProgressBar>
+                <div className="text-center mt-1">
+                  <small className="text-muted">
+                    <span className="text-success">{positivePercentage.toFixed(1)}%</span> for, <span className="text-danger">{negativePercentage.toFixed(1)}%</span> against
+                  </small>
+                </div>
               </div>
-              <ProgressBar>
-                <ProgressBar variant="success" now={positivePercentage} key={1} />
-                <ProgressBar variant="danger" now={negativePercentage} key={2} />
-              </ProgressBar>
             </Card.Body>
           </Card>
         </Col>
         
         <Col md={6} lg={3}>
           <Card className="h-100">
-            <Card.Body>
+            <Card.Body className="d-flex flex-column">
               <Card.Title className="fs-6">Quorum Success Rate</Card.Title>
-              <div className="text-center mb-2">
+              <div className="text-center mb-3">
                 <h5>{quorumSuccessRate.toFixed(1)}%</h5>
                 <small className="text-muted">{proposalsReachedQuorum} of {totalProposals} proposals reached quorum</small>
               </div>
-              <ProgressBar 
-                variant={quorumSuccessRate > 66 ? "success" : quorumSuccessRate > 33 ? "warning" : "danger"} 
-                now={quorumSuccessRate} 
-              />
+              <div className="mt-auto">
+                <ProgressBar 
+                  variant={quorumSuccessRate > 66 ? "success" : quorumSuccessRate > 33 ? "warning" : "danger"} 
+                  now={quorumSuccessRate} 
+                />
+                <div className="text-center mt-1">
+                  <small className="text-muted">
+                    {quorumSuccessRate > 66 ? 'High success rate' : quorumSuccessRate > 33 ? 'Moderate success' : 'Low success rate'}
+                  </small>
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>
         
         <Col md={6} lg={3}>
           <Card className="h-100">
-            <Card.Body>
+            <Card.Body className="d-flex flex-column">
               <Card.Title className="fs-6">Average Participation</Card.Title>
-              <div className="text-center mb-2">
+              <div className="text-center mb-3">
                 <h5>{avgVotesPerProposal.toFixed(1)} ETH</h5>
                 <small className="text-muted">Average votes per proposal</small>
               </div>
-              <ProgressBar 
-                variant="info" 
-                now={Math.min(100, (avgVotesPerProposal / Number(ethers.utils.formatEther(quorum))) * 100)} 
-              />
-              <div className="text-center mt-1">
-                <small className="text-muted">
-                  {Math.min(100, ((avgVotesPerProposal / Number(ethers.utils.formatEther(quorum))) * 100).toFixed(1))}% of quorum
-                </small>
+              <div className="mt-auto">
+                <ProgressBar 
+                  variant="info" 
+                  now={Math.min(100, (avgVotesPerProposal / Number(ethers.utils.formatEther(quorum))) * 100)} 
+                />
+                <div className="text-center mt-1">
+                  <small className="text-muted">
+                    {Math.min(100, ((avgVotesPerProposal / Number(ethers.utils.formatEther(quorum))) * 100).toFixed(1))}% of quorum
+                  </small>
+                </div>
               </div>
             </Card.Body>
           </Card>
