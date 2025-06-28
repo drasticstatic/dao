@@ -28,64 +28,90 @@ function App() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [walletConnected, setWalletConnected] = useState(false)
+  const [error, setError] = useState(null)
 
   const connectWallet = async () => {
     try {
       await window.ethereum.request({ method: 'eth_requestAccounts' })
       setWalletConnected(true)
       setIsLoading(true)
+      loadBlockchainData()
     } catch (error) {
       console.error('Error connecting wallet:', error)
+      setIsLoading(false)
     }
   }
 
   const loadBlockchainData = async () => {
     if (!window.ethereum) {
       console.error('MetaMask not detected')
+      setIsLoading(false)
       return
     }
 
     try {
+      console.log('Loading blockchain data...')
+      
       // Initiate provider
       const provider = new ethers.providers.Web3Provider(window.ethereum)
       setProvider(provider)
+      console.log('Provider set')
 
-    // Initiate contracts
-    const dao = new ethers.Contract(config[31337].dao.address, DAO_ABI, provider)
-    setDao(dao)
+      // Check network
+      const network = await provider.getNetwork()
+      console.log('Network:', network)
+      
+      if (!config[network.chainId]) {
+        throw new Error(`Unsupported network. Please switch to localhost (chainId: 31337)`)
+      }
 
-    // Fetch treasury balance
-    let treasuryBalance = await provider.getBalance(dao.address)
-    treasuryBalance = ethers.utils.formatUnits(treasuryBalance, 18)
-    setTreasuryBalance(treasuryBalance)
+      // Initiate contracts
+      const dao = new ethers.Contract(config[network.chainId].dao.address, DAO_ABI, provider)
+      setDao(dao)
+      console.log('DAO contract set')
 
-    // Fetch accounts
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
-    const account = ethers.utils.getAddress(accounts[0])
-    setAccount(account)
+      // Fetch treasury balance
+      let treasuryBalance = await provider.getBalance(dao.address)
+      treasuryBalance = ethers.utils.formatUnits(treasuryBalance, 18)
+      setTreasuryBalance(treasuryBalance)
+      console.log('Treasury balance:', treasuryBalance)
 
-    // Fetch proposals count
-    const count = await dao.proposalCount()
-    const items = []
+      // Fetch accounts
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+      if (accounts.length === 0) {
+        throw new Error('No accounts found. Please connect your wallet.')
+      }
+      const account = ethers.utils.getAddress(accounts[0])
+      setAccount(account)
+      console.log('Account set:', account)
 
-    // "i" = iterator
-    for(var i = 0; i < count; i++) {
-      const proposal = await dao.proposals(i + 1) // i+1 b/c i=0 initially
-      items.push(proposal) // "push" is a function that adds (at the end) to the items array above
-    }
+      // Fetch proposals count
+      const count = await dao.proposalCount()
+      console.log('Proposal count:', count.toString())
+      const items = []
 
-    setProposals(items)
+      // "i" = iterator
+      for(var i = 0; i < count; i++) {
+        const proposal = await dao.proposals(i + 1) // i+1 b/c i=0 initially
+        items.push(proposal) // "push" is a function that adds (at the end) to the items array above
+      }
 
-    console.log(items)
+      setProposals(items)
+      console.log('Proposals loaded:', items)
 
-    // Fetch quorum
-    setQuorum(await dao.quorum())
+      // Fetch quorum
+      const quorumValue = await dao.quorum()
+      setQuorum(quorumValue)
+      console.log('Quorum:', quorumValue.toString())
 
-    setIsLoading(false)
-    setWalletConnected(true)
+      setIsLoading(false)
+      setWalletConnected(true)
+      console.log('Blockchain data loaded successfully')
     } catch (error) {
       console.error('Error loading blockchain data:', error)
+      setError(error.message)
       setIsLoading(false)
+      setWalletConnected(false)
     }
   }
 
@@ -96,27 +122,44 @@ function App() {
           const accounts = await window.ethereum.request({ method: 'eth_accounts' })
           if (accounts.length > 0) {
             setWalletConnected(true)
-            if (isLoading) {
-              loadBlockchainData()
-            }
+            loadBlockchainData()
           } else {
+            setWalletConnected(false)
             setIsLoading(false)
           }
         } catch (error) {
           console.error('Error checking wallet connection:', error)
+          setWalletConnected(false)
           setIsLoading(false)
         }
       } else {
+        setWalletConnected(false)
         setIsLoading(false)
       }
     }
 
     checkWalletConnection()
-  }, [isLoading]);
+    
+    // Listen for account changes
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length > 0) {
+          setWalletConnected(true)
+          setIsLoading(true)
+          loadBlockchainData()
+        } else {
+          setWalletConnected(false)
+          setAccount("")
+          setProposals(null)
+          setIsLoading(false)
+        }
+      })
+    }
+  }, []);
 
   return(
     <Container style={{ paddingTop: '80px' }}>
-      <Navigation account={account} />
+      <Navigation account={account} walletConnected={walletConnected} />
 
       <div className="text-center my-4">
         <h1 className='mb-2'>Welcome to our DAO!</h1>
@@ -140,6 +183,26 @@ function App() {
             Connect Wallet
           </Button>
         </div>
+      ) : error ? (
+        <div className="text-center">
+          <Alert variant="danger">
+            <h4>Error Loading Data</h4>
+            <p>{error}</p>
+            <p className="mb-3">Please ensure:</p>
+            <ul className="text-start">
+              <li>Hardhat node is running: <code>npx hardhat node</code></li>
+              <li>Contracts are deployed: <code>npx hardhat run scripts/deploy.js --network localhost</code></li>
+              <li>MetaMask is connected to localhost:8545</li>
+            </ul>
+          </Alert>
+          <Button variant="primary" onClick={() => {
+            setError(null)
+            setIsLoading(true)
+            loadBlockchainData()
+          }}>
+            Retry
+          </Button>
+        </div>
       ) : isLoading ? (
         <Loading />
       ) : (
@@ -156,18 +219,22 @@ function App() {
 
           <hr/>
           
-          <ProposalAnalytics 
-            proposals={proposals}
-            quorum={quorum}
-          />
+          {proposals && quorum && (
+            <ProposalAnalytics 
+              proposals={proposals}
+              quorum={quorum}
+            />
+          )}
 
-          <Proposals
-            provider={provider}
-            dao={dao}
-            proposals={proposals}
-            quorum={quorum}
-            setIsLoading={setIsLoading}
-          />
+          {proposals && (
+            <Proposals
+              provider={provider}
+              dao={dao}
+              proposals={proposals}
+              quorum={quorum}
+              setIsLoading={setIsLoading}
+            />
+          )}
         </>
       )}
     </Container>

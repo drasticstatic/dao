@@ -3,6 +3,18 @@ import { Card, Row, Col, ProgressBar } from 'react-bootstrap';
 import { ethers } from 'ethers';
 
 const ProposalAnalytics = ({ proposals, quorum }) => {
+  // Early return if data not loaded
+  if (!proposals || !quorum) {
+    return (
+      <div className="mb-4">
+        <h4 className="mb-3">Proposal Analytics</h4>
+        <div className="text-center text-muted">
+          <p>Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+  
   // Calculate analytics data
   const totalProposals = proposals.length;
   const finalizedProposals = proposals.filter(p => p.finalized).length;
