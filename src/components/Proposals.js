@@ -9,6 +9,8 @@ import Badge from 'react-bootstrap/Badge';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { ethers } from 'ethers';
+import VotingInterface from './VotingInterface';
+import ParticipationProgress from './ParticipationProgress';
 
 /**
  * Proposals Component - Displays and manages DAO proposals
@@ -157,9 +159,9 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
     } else if (proposal.finalized) {
       return <Badge bg="success" style={{ fontSize: '0.9rem', padding: '0.5rem' }}><small>✓</small> &nbsp;Approved&nbsp; <small>✓</small></Badge>;
     } else if (proposal.votes >= quorum) {
-      return <Badge bg="warning" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>Ready to Finalize <big>🤩</big></Badge>;
+      return <Badge bg="warning" style={{ fontSize: '0.9rem', padding: '0.5rem' }}><big>🤩</big> Ready to Finalize <big>🎯👉🏾</big></Badge>;
     } else if (proposal.negativeVotes >= quorum) {
-      return <Badge bg="danger" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>Ready to Cancel <big>😞</big></Badge>;
+      return <Badge bg="danger" style={{ fontSize: '0.9rem', padding: '0.5rem' }}><big>😞</big> Ready to Cancel <big>🎯👉</big></Badge>;
     } else {
       return <Badge bg="info" style={{ fontSize: '0.9rem', padding: '0.5rem' }}>In Progress <big>😁</big></Badge>;
     }
@@ -294,13 +296,21 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
         </div>
       </div>
       
+      {/* Participation Progress for Active Proposals - Show only one combined */}
+      {proposals.filter(p => !p.finalized && !p.cancelled).length > 0 && (
+        <ParticipationProgress 
+          proposals={proposals.filter(p => !p.finalized && !p.cancelled)}
+          totalSupply={ethers.utils.parseEther('1000000')} // 1M total supply
+        />
+      )}
+      
       {/* Custom table with fixed header */}
       <div style={{ 
         position: 'relative',
-        maxHeight: '333px',
+        maxHeight: '875px',
         overflow: 'auto',
         border: '1px solid #dee2e6'
-      }}>
+      }}> {/* maxHeight controls amount of viewing area for scrolling list of proposals */}
         <Table striped bordered hover style={{ marginBottom: 0 }}>
           <thead style={{ 
             position: 'sticky', 
@@ -330,19 +340,37 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
               {/* Proposal ID */}
               <td className="text-center">{proposal.id.toString()}</td>
               
-              {/* Proposal name with tooltip showing description */}
+              {/* Proposal name with description underneath */}
               <td>
-                <OverlayTrigger
-                  placement="top"
-                  overlay={<Tooltip>
-                    <div>
-                      <strong>ID:</strong> {proposal.id.toString()}<br/>
-                      <strong>Description:</strong> {proposal.description || "No description provided"}
-                    </div>
-                  </Tooltip>}
+                <div>
+                  <OverlayTrigger
+                    placement="top"
+                    overlay={<Tooltip>
+                      <div>
+                        <strong>ID:</strong> {proposal.id.toString()}<br/>
+                        <strong>Description:</strong> {proposal.description || "No description provided"}
+                      </div>
+                    </Tooltip>}
                   >
-                  <span>{proposal.name}</span>
-                </OverlayTrigger>
+                    <span>
+                      {(() => {
+                        const parts = proposal.name.split(' - ');
+                        return parts[0]; // Show only the "Test Proposal #" part
+                      })()} 
+                    </span>
+                  </OverlayTrigger>
+                  {(() => {
+                    const parts = proposal.name.split(' - ');
+                    if (parts.length > 1) {
+                      return (
+                        <div>
+                          <small className="text-muted" style={{ fontSize: '0.75rem' }}>{parts[1]}</small>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()} 
+                </div>
               </td>
                 
             {/* Amount in ETH (converted from wei) */}
@@ -370,39 +398,105 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
               {/* ? = Ternary operator ; return string 'Approved' if proposal.finalized is true, else return 'In Progress' */}
                 {/* Now using JSX 'getStatusBadge'function to determine and display status with color-coded badge */}
                 {/* ↓ */}
-              {/* Status badge (color-coded) */}
-              <td className="text-center">{getStatusBadge(proposal)}</td>
+              {/* Status badge (color-coded) with participation */}
+              <td className="text-center">
+                <div>{getStatusBadge(proposal)}</div>
+                <div className="mt-2">
+                  {(() => {
+                    const totalParticipation = Number(ethers.utils.formatEther(proposal.totalParticipation || 0));
+                    const totalSupply = 1000000; // 1M total supply
+                    const participationRate = totalSupply > 0 ? (totalParticipation / totalSupply) * 100 : 0;
+                    
+                    // Calculate vote distribution for this proposal
+                    const positiveVotes = Number(ethers.utils.formatEther(proposal.positiveVotes || 0));
+                    const negativeVotes = Number(ethers.utils.formatEther(proposal.negativeVotes || 0));
+                    const abstainVotes = Number(ethers.utils.formatEther(proposal.abstainVotes || 0));
+                    const totalVotes = positiveVotes + negativeVotes + abstainVotes;
+                    
+                    const positivePercentage = totalVotes > 0 ? (positiveVotes / totalVotes) * 100 : 0;
+                    const negativePercentage = totalVotes > 0 ? (negativeVotes / totalVotes) * 100 : 0;
+                    const abstainPercentage = totalVotes > 0 ? (abstainVotes / totalVotes) * 100 : 0;
+                    
+                    // Color based on participation rate
+                    const textColor = participationRate >= 100 ? 'text-success' : 
+                                     participationRate >= 50 ? 'text-info' : 'text-muted';
+                    
+                    return (
+                      <>
+                        <small className={textColor}>
+                          {participationRate.toFixed(1)}% participated
+                        </small>
+                        <div className="mt-1" style={{ width: '100px', margin: '0 auto' }}>
+                          <div className="mini-progress-bar" style={{ height: '4px', width: '100%', borderRadius: '2px', overflow: 'hidden', display: 'flex' }}>
+                            <div style={{ 
+                              width: `${positivePercentage}%`, 
+                              backgroundColor: '#28a745',
+                              height: '100%'
+                            }}></div>
+                            <div style={{ 
+                              width: `${negativePercentage}%`, 
+                              backgroundColor: '#dc3545',
+                              height: '100%'
+                            }}></div>
+                            <div style={{ 
+                              width: `${abstainPercentage}%`, 
+                              backgroundColor: '#6c757d',
+                              height: '100%'
+                            }}></div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()} 
+                </div>
+              </td>
               
-              {/* Vote progress bars */}
+              {/* Vote progress bars with abstain */}
               <td className="text-center">
                 {/* For votes */}
-                <div className="mb-2">
+                <div className="mb-1">
                   <div className="d-flex justify-content-between">
                     <small className="text-success">For: {ethers.utils.formatEther(proposal.positiveVotes || 0)} ETH</small>
-                    <small className="text-success">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.positiveVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}% of quorum</small>
+                    <small className="text-success">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.positiveVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%</small>
                   </div>
-                  <div style={{ height: '8px', width: '100%', backgroundColor: '#e9ecef', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div className="table-progress-bar" style={{ height: '6px', width: '100%', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ 
                       height: '100%', 
                       width: `${Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.positiveVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%`, 
                       backgroundColor: '#28a745',
-                      borderRadius: '4px'
+                      borderRadius: '3px'
                     }}></div>
                   </div>
                 </div>
                 
                 {/* Against votes */}
-                <div>
+                <div className="mb-1">
                   <div className="d-flex justify-content-between">
                     <small className="text-danger">Against: {ethers.utils.formatEther(proposal.negativeVotes || 0)} ETH</small>
-                    <small className="text-danger">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.negativeVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}% of quorum</small>
+                    <small className="text-danger">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.negativeVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%</small>
                   </div>
-                  <div style={{ height: '8px', width: '100%', backgroundColor: '#e9ecef', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div className="table-progress-bar" style={{ height: '6px', width: '100%', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ 
                       height: '100%', 
                       width: `${Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.negativeVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%`, 
                       backgroundColor: '#dc3545',
-                      borderRadius: '4px'
+                      borderRadius: '3px'
+                    }}></div>
+                  </div>
+                </div>
+                
+                {/* Abstain votes */}
+                <div className="mb-1">
+                  <div className="d-flex justify-content-between">
+                    <small className="text-secondary">Abstain: {ethers.utils.formatEther(proposal.abstainVotes || 0)} ETH</small>
+                    <small className="text-secondary">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.abstainVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%</small>
+                  </div>
+                  <div className="table-progress-bar" style={{ height: '6px', width: '100%', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ 
+                      height: '100%', 
+                      width: `${Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.abstainVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%`, 
+                      backgroundColor: '#6c757d',
+                      borderRadius: '3px'
                     }}></div>
                   </div>
                 </div>
@@ -411,8 +505,26 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
               {/* Action buttons (vote, finalize) based on proposal state */}
               <td>
                 <div className="d-flex gap-2 justify-content-center">
-                  {/* Vote buttons - only show if user hasn't voted and proposal isn't cancelled */}
+                  {/* Enhanced voting interface - only show if user hasn't voted and proposal isn't cancelled */}
                   {!proposal.finalized && !proposal.cancelled && !userVotes[proposal.id.toString()] && (
+                    <div style={{ minWidth: '200px' }}>
+                      <VotingInterface 
+                        proposal={proposal}
+                        dao={dao}
+                        provider={provider}
+                        onVoteComplete={() => {
+                          // Update local state
+                          const newVotes = {...userVotes};
+                          newVotes[proposal.id.toString()] = true;
+                          setUserVotes(newVotes);
+                          setIsLoading(true);
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Legacy vote buttons for comparison - hidden by default */}
+                  {false && !proposal.finalized && !proposal.cancelled && !userVotes[proposal.id.toString()] && (
                     <div className="d-flex gap-1">
                       <Button
                         variant="success"
@@ -609,9 +721,9 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                       onClick={() => finalizeHandler(proposal.id)}
                     >
                       {finalizingProposalId === proposal.id ? (
-                        <><Spinner as="span" animation="border" size="sm" /> Finalizing...</>
+                        <><Spinner as="span" animation="border" size="sm" /> ⏳ Finalizing...</>
                       ) : (
-                        'Finalize'
+                        '👆Finalize'
                       )}
                     </Button>
                   )}
@@ -628,9 +740,9 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                       onClick={() => cancelHandler(proposal.id)}
                     >
                       {cancellingProposalId === proposal.id ? (
-                        <><Spinner as="span" animation="border" size="sm" /> Cancelling...</>
+                        <><Spinner as="span" animation="border" size="sm" /> ⏳ Cancelling...</>
                       ) : (
-                        'Cancel'
+                        '👆Cancel'
                       )}
                     </Button>
                   )}
@@ -662,13 +774,20 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
       </div>
       <br/>
       <div className="alert alert-info mb-3 p-2" style={{ fontSize: '0.85rem' }}>
+        <p className="mb-4">&nbsp;&nbsp;&nbsp;&nbsp;<strong>Create your own proposals using the form above</strong></p>
         <p className="mb-1"><strong>Demo Setup:</strong> Proposals 1-3 are pre-created and finalized upon deployment. Proposal 4 has votes but is not finalized so you can interact with it.</p>
-        <p className="mb-0">&nbsp;&nbsp;Hardhat 0 is the <u>deployer</u> & a <u>token holder</u> <em>but</em> did <u>not</u> vote during deployment</p>
-        <p className="mb-0">&nbsp;&nbsp;Hardhat 1 is creator of the deployed proposals, a <u>token holder</u> & <u>voted in favor</u> for proposal 1-<u>3</u></p>
-        <p className="mb-0">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em>but</em> did <u>not</u> yet vote for proposal <u>4</u> to avoid reaching quorum upon deployment in order to display in-progress/unfinalized example</p>
-        <p className="mb-0">&nbsp;&nbsp;Hardhat 2 & 3 ARE <u>token holders</u> & <u>voted in favor</u> for proposal 1-<u>4</u></p>
-        <p className="mb-1">&nbsp;&nbsp;Hardhat 4 is <u>NOT a token holder</u> & therefore <u>cannot vote or create proposals</u></p>
-        <p className="mb-0">Hover over proposal names to see descriptions. <strong>Create your own proposals using the form above.</strong></p>
+        <p className="mb-0">&nbsp;&nbsp;account[0] = <strong>deployer</strong>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hardhat 0 is the <u>deployer</u> & a <u>token holder</u> <em>but</em> did <u>not</u> vote during deployment</p>
+        <p className="mb-0">&nbsp;&nbsp;account[1] = <strong>investor 1 </strong>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hardhat 1 is creator of the deployed proposals, a <u>token holder</u> & <u>voted in favor</u> for proposal 1-<u>3</u></p>
+        <p className="mb-0">&nbsp;&nbsp;account[2] = <strong>investor 2</strong></p>
+        <p className="mb-0">&nbsp;&nbsp;account[3] = <strong>investor 3</strong>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hardhat 2 & 3 ARE <u>token holders</u> & <u>voted in favor</u> for proposal 1-<u>4</u>
+          <em> but</em> did <u>not</u> yet vote for proposal <u>4</u> to avoid reaching quorum to display in-progress example</p>
+        <p className="mb-0">&nbsp;&nbsp;account[4] = <strong>recipient</strong>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hardhat 4 is <u>NOT a token holder</u> & therefore <u>cannot vote or create proposals</u></p>
+        <p className="mb-3">&nbsp;&nbsp;account[5] = <strong>user</strong></p>
+        <p className="mb-1">&nbsp;&nbsp;&nbsp;&nbsp;Hover over proposal names in table above to view descriptions</p>
       </div>
     </>
   );

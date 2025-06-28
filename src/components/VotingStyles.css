@@ -1,0 +1,192 @@
+/* Voting Interface Styles */
+.voting-interface {
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.voting-interface .btn {
+  transition: all 0.2s ease;
+}
+
+.voting-interface .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Participation Progress Styles */
+.pulse-success {
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% { 
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); 
+  }
+  70% { 
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); 
+  }
+  100% { 
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); 
+  }
+}
+
+.completion-celebration {
+  background: linear-gradient(45deg, #28a745, #20c997);
+  color: white;
+  border-radius: 8px;
+  animation: celebrate 1s ease-in-out;
+}
+
+@keyframes celebrate {
+  0% { 
+    transform: scale(0.9); 
+    opacity: 0.7; 
+  }
+  50% { 
+    transform: scale(1.05); 
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+.engagement-prompt {
+  border-left: 4px solid #007bff;
+  animation: gentle-pulse 6s infinite;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { 
+    opacity: 1; 
+    border-left-color: #007bff;
+  }
+  25% { 
+    border-left-color: #28a745;
+  }
+  50% { 
+    opacity: 0.9;
+    border-left-color: #ffc107;
+  }
+  75% { 
+    border-left-color: #dc3545;
+  }
+}
+
+.message-transition {
+  transition: all 0.5s ease-in-out;
+}
+
+.message-fade-in {
+  animation: fadeInMessage 0.5s ease-in-out;
+}
+
+@keyframes fadeInMessage {
+  0% { 
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  100% { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced vote progress bars */
+.vote-progress-container {
+  min-width: 150px;
+}
+
+.vote-progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background-color: #e9ecef;
+  transition: all 0.3s ease;
+  border: 1px solid #dee2e6;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.vote-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* Global progress bar enhancements */
+.progress {
+  border: 1px solid #dee2e6 !important;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* Custom progress bars in tables */
+.table-progress-bar {
+  border: 1px solid #dee2e6;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  background-color: #f8f9fa;
+}
+
+.mini-progress-bar {
+  border: 1px solid #dee2e6;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.05);
+  background-color: #f8f9fa;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .voting-interface {
+    padding: 1rem;
+  }
+  
+  .voting-interface .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .participation-progress {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Table enhancements */
+.proposals-table {
+  font-size: 0.9rem;
+}
+
+.proposals-table th {
+  font-weight: 600;
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.proposals-table td {
+  vertical-align: middle;
+  padding: 0.75rem 0.5rem;
+}
+
+/* Status badges */
+.status-badge {
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+}
+
+/* Action buttons container */
+.action-buttons {
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Voted badge styling */
+.voted-badge {
+  background: linear-gradient(45deg, #6c757d, #495057);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}

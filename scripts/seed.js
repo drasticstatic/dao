@@ -14,7 +14,7 @@ const tokens = (n) => {
 const ether = tokens
 
 async function main() {
-  console.log(`Fetching accounts & network...\n`)
+  console.log(`\nFetching accounts & network...\n`)
 
   const accounts = await ethers.getSigners()
   const funder = accounts[0]
@@ -45,7 +45,6 @@ async function main() {
   await transaction.wait()
 
   console.log(`Fetching dao...\n`)
-
   // Fetch deployed dao
   const dao = await ethers.getContractAt('DAO', config[chainId].dao.address)
   console.log(`\u00A0✓ DAO fetched: ${dao.address}\n`)
@@ -58,8 +57,11 @@ async function main() {
 
   for (var i = 0; i < 3; i++) {
       // Create Proposal
-      transaction = await dao.connect(investor1).createProposal(`Deployed Test Proposal ${i + 1}`,
-        `Proposals 1 thru 3 are automatically finalized upon deployment`, ether(100), recipient.address)
+        // All 3 investors vote in favor, then finalize each proposal
+      transaction = await dao.connect(investor1).createProposal(
+        `*Approved & Finalized* |Test| Proposal ${i + 1} - Deployed w/ Quorum=inFavor + Finalized`,
+        `Proposals 1 thru 3 are tests where all 3 investors vote in favor with the proposal automatically finalized upon deployment`,
+        ether(50), recipient.address)
       await transaction.wait()
 
       // Vote 1 - in favor
@@ -81,11 +83,15 @@ async function main() {
       console.log(`\u00A0\u00A0\u00A0✓ Created & Finalized Proposal ${i + 1}\n`)
   }
 
-    console.log(`\u00A0Creating one more proposal...\n`)
+    console.log(`\u00A0\u00A0\u00A0Creating Proposal 4 w/out meeting quorum & unfinalized...\n`)
 
-    // Create one more proposal
-    transaction = await dao.connect(investor1).createProposal(`Deployed Test Proposal 4`,
-      `Proposal 4 is intentionally not finalized so users can intially interact with it upon deployment`, ether(100), recipient.address)
+    // Create a 4th proposal
+      // Where only 2 investors vote (not enough for quorum)
+        // Intentionally NOT finalized for user interaction
+    transaction = await dao.connect(investor1).createProposal(
+      `*Unfinished & Unfinalized* |Test| - Deployed w/ Quorum=notMet + notFinalized`,
+      `Proposal 4 is intentionally not finalized so users can intially interact with it upon deployment`,
+      ether(50), recipient.address)
     await transaction.wait()
 
     // Vote 1 - in favor
@@ -98,7 +104,15 @@ async function main() {
     
     // Note: We intentionally do not finalize Proposal 4 so users can interact with it
 
-    console.log(`\u00A0\u00A0✓ Finished ✓\n`)
+    console.log(`\u00A0\u00A0✓✓✓ Seed.js is Complete! ✓✓✓\n`)
+    console.log("\nNext steps:\n")
+    console.log("\u00A0npx hardhat run scripts/test-abstain.js --network...\n")
+    console.log("\u00A0\u00A0&\n")
+    console.log("\u00A0npx hardhat run scripts/test-oppose.js --network...\n")
+    console.log("\u00A0\u00A0&\n")
+    console.log("\u00A0npx hardhat run scripts/test-ready-cancel.js --network...\n")
+    console.log("\u00A0\u00A0&\n")
+    console.log("\u00A0npx hardhat run scripts/test-ready finalize.js --network...\n")
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -9,6 +9,9 @@ import Proposals from './Proposals';
 import ProposalAnalytics from './ProposalAnalytics';
 import Loading from './Loading';
 
+// Styles
+import './VotingStyles.css';
+
 // ABIs: Import your contract ABIs here
 import DAO_ABI from '../abis/DAO.json'
 

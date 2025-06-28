@@ -16,7 +16,7 @@ async function main() {
   let token = await Token.deploy(NAME, SYMBOL, MAX_SUPPLY)
 
   await token.deployed()
-  console.log(`✓ Token deployed to: ${token.address}\n`)
+  console.log(`\n✓ Token deployed to: ${token.address}\n`)
 
   // Deploy DAO
   const DAO = await hre.ethers.getContractFactory('DAO')

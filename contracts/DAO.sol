@@ -19,6 +19,8 @@ contract DAO {
         int256 votes; // net votes (positive votes - negative votes)
         uint256 positiveVotes; // votes in favor
         uint256 negativeVotes; // votes against
+        uint256 abstainVotes; // abstain votes
+        uint256 totalParticipation; // total voting power that participated
         bool finalized; // flag to indicate if the proposal has been finalized true/false
         bool cancelled; // flag to indicate if the proposal has been cancelled
     }
@@ -27,7 +29,7 @@ contract DAO {
     uint256 public proposalCount; // total number of proposals created
     mapping(uint256 => Proposal) public proposals; // mapping to store proposals by their id
 
-    mapping(address => mapping(uint256 => int8)) votes; // mapping to track if an address has voted on a proposal (1 = for, -1 = against, 0 = not voted)
+    mapping(address => mapping(uint256 => int8)) votes; // mapping to track if an address has voted on a proposal (1 = for, -1 = against, 2 = abstain, 0 = not voted)
     // Note mapping inside mapping
 
     /* Events stream data to the blockchain, so we can listen to them in our frontend
@@ -46,7 +48,7 @@ contract DAO {
         address recipient,
         address creator
     );
-    event Vote(uint256 id, address investor, bool inFavor);
+    event Vote(uint256 id, address investor, int8 choice); // 1 = for, -1 = against, 2 = abstain
     event Finalize(uint256 id);
     event Cancel(uint256 id);
 
@@ -101,6 +103,8 @@ contract DAO {
             0, // initial net votes are 0
             0, // initial positive votes are 0
             0, // initial negative votes are 0
+            0, // initial abstain votes are 0
+            0, // initial total participation is 0
             false, // 'not finalized' when initially created
             false  // 'not cancelled' when initially created
         );
@@ -115,51 +119,53 @@ contract DAO {
         );
     }
 
-    // Vote on proposal (either in favor or against)
+    // Vote on proposal with choice (1 = for, -1 = against, 2 = abstain)
+    function vote(uint256 _id, int8 _choice) external onlyInvestor {
+        _voteWithChoice(_id, _choice);
+    }
+    
+    // Vote on proposal (either in favor or against) - for backward compatibility
     function vote(uint256 _id, bool _inFavor) external onlyInvestor {
-        // Fetch proposal from mapping by id
-        Proposal storage proposal = proposals[_id];
-
-        // Don't let investors vote twice
-        require(votes[msg.sender][_id] == 0, "already voted");
-
-        // Get voter's token balance
-        uint256 voterBalance = token.balanceOf(msg.sender);
-        
-        if (_inFavor) {
-            // Vote in favor - increase positive votes and net votes
-            proposal.positiveVotes += voterBalance;
-            proposal.votes += int256(voterBalance);
-            votes[msg.sender][_id] = 1; // Mark as voted in favor
-        } else {
-            // Vote against - increase negative votes and decrease net votes
-            proposal.negativeVotes += voterBalance;
-            proposal.votes -= int256(voterBalance);
-            votes[msg.sender][_id] = -1; // Mark as voted against
-        }
-
-        // Emit an event
-        emit Vote(_id, msg.sender, _inFavor);
+        _voteWithChoice(_id, _inFavor ? int8(1) : int8(-1));
     }
     
     // Legacy vote function (always votes in favor) for backward compatibility
     function vote(uint256 _id) external onlyInvestor {
+        _voteWithChoice(_id, int8(1));
+    }
+    
+    // Internal function to handle voting logic
+    function _voteWithChoice(uint256 _id, int8 _choice) internal {
         // Fetch proposal from mapping by id
         Proposal storage proposal = proposals[_id];
 
         // Don't let investors vote twice
         require(votes[msg.sender][_id] == 0, "already voted");
+        require(_choice == 1 || _choice == -1 || _choice == 2, "invalid choice");
 
         // Get voter's token balance
         uint256 voterBalance = token.balanceOf(msg.sender);
         
-        // Vote in favor - increase positive votes and net votes
-        proposal.positiveVotes += voterBalance;
-        proposal.votes += int256(voterBalance);
-        votes[msg.sender][_id] = 1; // Mark as voted in favor
+        // Update total participation
+        proposal.totalParticipation += voterBalance;
+        
+        if (_choice == 1) {
+            // Vote in favor
+            proposal.positiveVotes += voterBalance;
+            proposal.votes += int256(voterBalance);
+        } else if (_choice == -1) {
+            // Vote against
+            proposal.negativeVotes += voterBalance;
+            proposal.votes -= int256(voterBalance);
+        } else {
+            // Abstain - only counts toward participation
+            proposal.abstainVotes += voterBalance;
+        }
+        
+        votes[msg.sender][_id] = _choice;
 
         // Emit an event
-        emit Vote(_id, msg.sender, true);
+        emit Vote(_id, msg.sender, _choice);
     }
 
     // Finalize proposal & tranfer funds
@@ -220,5 +226,22 @@ contract DAO {
     // Check if an investor has voted against a specific proposal
     function hasVotedAgainst(address _investor, uint256 _id) public view returns (bool) {
         return votes[_investor][_id] == -1;
+    }
+    
+    // Check if an investor has abstained on a specific proposal
+    function hasAbstained(address _investor, uint256 _id) public view returns (bool) {
+        return votes[_investor][_id] == 2;
+    }
+    
+    // Get voting choice for an investor on a specific proposal
+    function getVoteChoice(address _investor, uint256 _id) public view returns (int8) {
+        return votes[_investor][_id];
+    }
+    
+    // Get participation rate for a proposal (percentage of total supply that voted)
+    function getParticipationRate(uint256 _id) public view returns (uint256) {
+        Proposal storage proposal = proposals[_id];
+        uint256 totalSupply = token.totalSupply();
+        return totalSupply > 0 ? (proposal.totalParticipation * 100) / totalSupply : 0;
     }
 }

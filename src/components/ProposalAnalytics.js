@@ -26,11 +26,14 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
     sum + Number(ethers.utils.formatEther(p.positiveVotes || 0)), 0);
   const totalNegativeVotes = proposals.reduce((sum, p) => 
     sum + Number(ethers.utils.formatEther(p.negativeVotes || 0)), 0);
-  const totalVotes = totalPositiveVotes + totalNegativeVotes;
+  const totalAbstainVotes = proposals.reduce((sum, p) => 
+    sum + Number(ethers.utils.formatEther(p.abstainVotes || 0)), 0);
+  const totalVotes = totalPositiveVotes + totalNegativeVotes + totalAbstainVotes;
   
   // Calculate percentages
   const positivePercentage = totalVotes > 0 ? (totalPositiveVotes / totalVotes) * 100 : 0;
   const negativePercentage = totalVotes > 0 ? (totalNegativeVotes / totalVotes) * 100 : 0;
+  const abstainPercentage = totalVotes > 0 ? (totalAbstainVotes / totalVotes) * 100 : 0;
   
   // Calculate average votes per proposal
   const avgVotesPerProposal = totalProposals > 0 ? totalVotes / totalProposals : 0;
@@ -77,18 +80,25 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
           <Card className="h-100">
             <Card.Body className="d-flex flex-column">
               <Card.Title className="fs-6">Voting Distribution</Card.Title>
-              <div className="d-flex justify-content-between mb-3">
+              <div className="d-flex justify-content-between mb-1">
                 <small className="text-success">For: {totalPositiveVotes.toFixed(1)} ETH</small>
                 <small className="text-danger">Against: {totalNegativeVotes.toFixed(1)} ETH</small>
+              </div>
+              <div className="d-flex justify-content-between mb-3">
+                <small className="text-secondary">Abstain: {totalAbstainVotes.toFixed(1)} ETH</small>
+                <small className="text-muted">Total: {totalVotes.toFixed(1)} ETH</small>
               </div>
               <div className="mt-auto">
                 <ProgressBar>
                   <ProgressBar variant="success" now={positivePercentage} key={1} />
                   <ProgressBar variant="danger" now={negativePercentage} key={2} />
+                  <ProgressBar variant="secondary" now={abstainPercentage} key={3} />
                 </ProgressBar>
                 <div className="text-center mt-1">
                   <small className="text-muted">
-                    <span className="text-success">{positivePercentage.toFixed(1)}%</span> for, <span className="text-danger">{negativePercentage.toFixed(1)}%</span> against
+                    <span className="text-success">{positivePercentage.toFixed(1)}%</span> for, 
+                    <span className="text-danger">{negativePercentage.toFixed(1)}%</span> against, 
+                    <span className="text-secondary">{abstainPercentage.toFixed(1)}%</span> abstain
                   </small>
                 </div>
               </div>
