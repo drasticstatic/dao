@@ -9,7 +9,7 @@ import Badge from 'react-bootstrap/Badge';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { ethers } from 'ethers';
-import VotingInterface from './VotingInterface';
+
 import ParticipationProgress from './ParticipationProgress';
 
 /**
@@ -21,7 +21,7 @@ import ParticipationProgress from './ParticipationProgress';
  * @param {BigNumber} quorum - Minimum votes required to pass a proposal
  * @param {Function} setIsLoading - Function to update loading state in parent component
  */
-const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
+const Proposals = ({ provider, dao, proposals, quorum, setIsLoading, loadBlockchainData }) => {
   // State variables to track UI states and user data
   const [votingProposalId, setVotingProposalId] = useState(null); // Tracks which proposal is being voted on
   const [finalizingProposalId, setFinalizingProposalId] = useState(null); // Tracks which proposal is being finalized
@@ -133,7 +133,10 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
       }
     }
     setFinalizingProposalId(null);
-    setIsLoading(true);
+
+    // Reload blockchain data to show updated proposal state
+    console.log('Finalization successful, reloading data...');
+    await loadBlockchainData();
   }
 
   /**
@@ -195,7 +198,10 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
       }
     }
     setCancellingProposalId(null);
-    setIsLoading(true);
+
+    // Reload blockchain data to show updated proposal state
+    console.log('Cancellation successful, reloading data...');
+    await loadBlockchainData();
   };
 
   return (
@@ -203,7 +209,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
       {/* Component header with title, quorum information, and debug buttons */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <h4 className="mb-1">Governance | Proposals</h4>
+          <h4 className="mb-1">Proposals | Governance</h4>
           <p className="text-muted mb-0" style={{ paddingLeft: '20px' }}>
             <small>Quorum required: {'> '}</small>
             <OverlayTrigger
@@ -427,22 +433,37 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                           {participationRate.toFixed(1)}% participated
                         </small>
                         <div className="mt-1" style={{ width: '100px', margin: '0 auto' }}>
-                          <div className="mini-progress-bar" style={{ height: '4px', width: '100%', borderRadius: '2px', overflow: 'hidden', display: 'flex' }}>
-                            <div style={{ 
-                              width: `${positivePercentage}%`, 
-                              backgroundColor: '#28a745',
-                              height: '100%'
-                            }}></div>
-                            <div style={{ 
-                              width: `${negativePercentage}%`, 
-                              backgroundColor: '#dc3545',
-                              height: '100%'
-                            }}></div>
-                            <div style={{ 
-                              width: `${abstainPercentage}%`, 
-                              backgroundColor: '#6c757d',
-                              height: '100%'
-                            }}></div>
+                          <div className="mini-progress-bar" style={{
+                            height: '4px',
+                            width: '100%',
+                            borderRadius: '2px',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            backgroundColor: '#e9ecef' // Background for non-participated portion
+                          }}>
+                            {/* Participated portion with vote distribution */}
+                            <div style={{
+                              width: `${participationRate}%`,
+                              height: '100%',
+                              display: 'flex'
+                            }}>
+                              <div style={{
+                                width: `${positivePercentage}%`,
+                                backgroundColor: '#28a745',
+                                height: '100%'
+                              }}></div>
+                              <div style={{
+                                width: `${negativePercentage}%`,
+                                backgroundColor: '#dc3545',
+                                height: '100%'
+                              }}></div>
+                              <div style={{
+                                width: `${abstainPercentage}%`,
+                                backgroundColor: '#6c757d',
+                                height: '100%'
+                              }}></div>
+                            </div>
+                            {/* Non-participated portion remains as background */}
                           </div>
                         </div>
                       </>
@@ -451,83 +472,133 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                 </div>
               </td>
               
-              {/* Vote progress bars with abstain */}
+              {/* Enhanced vote progress bars with participation tracking */}
               <td className="text-center">
-                {/* For votes */}
-                <div className="mb-1">
-                  <div className="d-flex justify-content-between">
-                    <small className="text-success">For: {ethers.utils.formatEther(proposal.positiveVotes || 0)} ETH</small>
-                    <small className="text-success">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.positiveVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%</small>
-                  </div>
-                  <div className="table-progress-bar" style={{ height: '6px', width: '100%', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      height: '100%', 
-                      width: `${Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.positiveVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%`, 
-                      backgroundColor: '#28a745',
-                      borderRadius: '3px'
-                    }}></div>
-                  </div>
-                </div>
-                
-                {/* Against votes */}
-                <div className="mb-1">
-                  <div className="d-flex justify-content-between">
-                    <small className="text-danger">Against: {ethers.utils.formatEther(proposal.negativeVotes || 0)} ETH</small>
-                    <small className="text-danger">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.negativeVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%</small>
-                  </div>
-                  <div className="table-progress-bar" style={{ height: '6px', width: '100%', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      height: '100%', 
-                      width: `${Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.negativeVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%`, 
-                      backgroundColor: '#dc3545',
-                      borderRadius: '3px'
-                    }}></div>
-                  </div>
-                </div>
-                
-                {/* Abstain votes */}
-                <div className="mb-1">
-                  <div className="d-flex justify-content-between">
-                    <small className="text-secondary">Abstain: {ethers.utils.formatEther(proposal.abstainVotes || 0)} ETH</small>
-                    <small className="text-secondary">{Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.abstainVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%</small>
-                  </div>
-                  <div className="table-progress-bar" style={{ height: '6px', width: '100%', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      height: '100%', 
-                      width: `${Math.min(100, Math.round((Number(ethers.utils.formatEther(proposal.abstainVotes || 0)) / Number(ethers.utils.formatEther(quorum))) * 100))}%`, 
-                      backgroundColor: '#6c757d',
-                      borderRadius: '3px'
-                    }}></div>
-                  </div>
-                </div>
+                {(() => {
+                  // Calculate participation rate for this proposal
+                  const totalParticipation = Number(ethers.utils.formatEther(proposal.totalParticipation || 0));
+                  const totalSupply = 1000000; // 1M tokens total supply
+                  const participationRate = Math.min(100, (totalParticipation / totalSupply) * 100);
+
+                  // Calculate vote amounts
+                  const positiveVotes = Number(ethers.utils.formatEther(proposal.positiveVotes || 0));
+                  const negativeVotes = Number(ethers.utils.formatEther(proposal.negativeVotes || 0));
+                  const abstainVotes = Number(ethers.utils.formatEther(proposal.abstainVotes || 0));
+                  const quorumAmount = Number(ethers.utils.formatEther(quorum));
+
+                  return (
+                    <>
+                      {/* For votes */}
+                      <div className="mb-1">
+                        <div className="d-flex justify-content-between">
+                          <small className="text-success">For: {ethers.utils.formatEther(proposal.positiveVotes || 0)} ETH</small>
+                          <small className="text-success">{Math.min(100, Math.round((positiveVotes / quorumAmount) * 100))}%</small>
+                        </div>
+                        <div className="table-progress-bar" style={{
+                          height: '6px',
+                          width: '100%',
+                          borderRadius: '3px',
+                          overflow: 'hidden',
+                          backgroundColor: '#e9ecef',
+                          position: 'relative'
+                        }}>
+                          {/* Participation background */}
+                          <div className="participation-background" style={{
+                            height: '100%',
+                            width: `${participationRate}%`,
+                            position: 'absolute',
+                            left: 0
+                          }}></div>
+                          {/* Actual vote progress */}
+                          <div style={{
+                            height: '100%',
+                            width: `${Math.min(100, Math.round((positiveVotes / quorumAmount) * 100))}%`,
+                            backgroundColor: '#28a745',
+                            borderRadius: '3px',
+                            position: 'relative',
+                            zIndex: 2
+                          }}></div>
+                        </div>
+                      </div>
+
+                      {/* Against votes */}
+                      <div className="mb-1">
+                        <div className="d-flex justify-content-between">
+                          <small className="text-danger">Against: {ethers.utils.formatEther(proposal.negativeVotes || 0)} ETH</small>
+                          <small className="text-danger">{Math.min(100, Math.round((negativeVotes / quorumAmount) * 100))}%</small>
+                        </div>
+                        <div className="table-progress-bar" style={{
+                          height: '6px',
+                          width: '100%',
+                          borderRadius: '3px',
+                          overflow: 'hidden',
+                          backgroundColor: '#e9ecef',
+                          position: 'relative'
+                        }}>
+                          {/* Participation background */}
+                          <div className="participation-background" style={{
+                            height: '100%',
+                            width: `${participationRate}%`,
+                            position: 'absolute',
+                            left: 0
+                          }}></div>
+                          {/* Actual vote progress */}
+                          <div style={{
+                            height: '100%',
+                            width: `${Math.min(100, Math.round((negativeVotes / quorumAmount) * 100))}%`,
+                            backgroundColor: '#dc3545',
+                            borderRadius: '3px',
+                            position: 'relative',
+                            zIndex: 2
+                          }}></div>
+                        </div>
+                      </div>
+
+                      {/* Abstain votes */}
+                      <div className="mb-1">
+                        <div className="d-flex justify-content-between">
+                          <small className="text-secondary">Abstain: {ethers.utils.formatEther(proposal.abstainVotes || 0)} ETH</small>
+                          <small className="text-secondary">{Math.min(100, Math.round((abstainVotes / quorumAmount) * 100))}%</small>
+                        </div>
+                        <div className="table-progress-bar" style={{
+                          height: '6px',
+                          width: '100%',
+                          borderRadius: '3px',
+                          overflow: 'hidden',
+                          backgroundColor: '#e9ecef',
+                          position: 'relative'
+                        }}>
+                          {/* Participation background */}
+                          <div className="participation-background" style={{
+                            height: '100%',
+                            width: `${participationRate}%`,
+                            position: 'absolute',
+                            left: 0
+                          }}></div>
+                          {/* Actual vote progress */}
+                          <div style={{
+                            height: '100%',
+                            width: `${Math.min(100, Math.round((abstainVotes / quorumAmount) * 100))}%`,
+                            backgroundColor: '#6c757d',
+                            borderRadius: '3px',
+                            position: 'relative',
+                            zIndex: 2
+                          }}></div>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </td>
               
               {/* Action buttons (vote, finalize) based on proposal state */}
               <td>
                 <div className="d-flex gap-2 justify-content-center">
-                  {/* Enhanced voting interface - only show if user hasn't voted and proposal isn't cancelled */}
+                  {/* Enhanced voting buttons - only show if user hasn't voted and proposal isn't cancelled */}
                   {!proposal.finalized && !proposal.cancelled && !userVotes[proposal.id.toString()] && (
-                    <div style={{ minWidth: '200px' }}>
-                      <VotingInterface 
-                        proposal={proposal}
-                        dao={dao}
-                        provider={provider}
-                        onVoteComplete={() => {
-                          // Update local state
-                          const newVotes = {...userVotes};
-                          newVotes[proposal.id.toString()] = true;
-                          setUserVotes(newVotes);
-                          setIsLoading(true);
-                        }}
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Legacy vote buttons for comparison - hidden by default */}
-                  {false && !proposal.finalized && !proposal.cancelled && !userVotes[proposal.id.toString()] && (
-                    <div className="d-flex gap-1">
+                    <div className="voting-button-group">
                       <Button
-                        variant="success"
+                        className={`vote-btn-for ${votingProposalId === proposal.id ? 'vote-btn-loading' : ''}`}
                         size="sm"
                         disabled={votingProposalId === proposal.id}
                         onClick={async () => {
@@ -562,6 +633,13 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                             setUserVotes(newVotes);
                             console.log(`Vote recorded for proposal ${proposalId}`);
 
+                            // Vote successful - reload data to show updated state
+                            console.log('Vote successful, reloading blockchain data...');
+                            setVotingProposalId(null);
+
+                            // Reload blockchain data to show updated proposal state
+                            await loadBlockchainData();
+
                         // Error Handling:
                         } catch (error) {
                           console.error('Error voting:', error);
@@ -582,11 +660,11 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                           } else {
                             window.alert('Transaction failed. Please check console for details.');
                           }
+                        } finally {
+                          // Always reset loading state
+                          console.log('Resetting voting state');
+                          setVotingProposalId(null);
                         }
-                        
-                        // Reset loading state and refresh data
-                        setVotingProposalId(null);
-                        setIsLoading(true);
                       }}
                     >
                       {votingProposalId === proposal.id ? (
@@ -597,7 +675,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                     </Button>
                     
                     <Button
-                      variant="danger"
+                      className={`vote-btn-against ${votingProposalId === proposal.id ? 'vote-btn-loading' : ''}`}
                       size="sm"
                       disabled={votingProposalId === proposal.id}
                       onClick={async () => {
@@ -631,7 +709,14 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                           newVotes[proposalId] = true;
                           setUserVotes(newVotes);
                           console.log(`Vote recorded for proposal ${proposalId}`);
-                          
+
+                          // Vote successful - reload data to show updated state
+                          console.log('Vote successful, reloading blockchain data...');
+                          setVotingProposalId(null);
+
+                          // Reload blockchain data to show updated proposal state
+                          await loadBlockchainData();
+
                         // Error Handling:
                         } catch (error) {
                           console.error('Error voting:', error);
@@ -652,17 +737,94 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading }) => {
                           } else {
                             window.alert('Transaction failed. Please check console for details.');
                           }
+                        } finally {
+                          // Always reset loading state
+                          console.log('Resetting voting state');
+                          setVotingProposalId(null);
                         }
-                        
-                        // Reset loading state and refresh data
-                        setVotingProposalId(null);
-                        setIsLoading(true);
                       }}
                     >
                       {votingProposalId === proposal.id ? (
                         <><Spinner as="span" animation="border" size="sm" /> Voting...</>
                       ) : (
                         <>👎 Against</>
+                      )}
+                    </Button>
+
+                    <Button
+                      className={`vote-btn-abstain ${votingProposalId === proposal.id ? 'vote-btn-loading' : ''}`}
+                      size="sm"
+                      disabled={votingProposalId === proposal.id}
+                      onClick={async () => {
+                        const proposalId = proposal.id.toString();
+                        console.log(`Attempting to abstain on proposal ${proposalId}...`);
+
+                        // Show loading state
+                        setVotingProposalId(proposal.id);
+
+                        try {
+                          // Call the blockchain transaction
+                          const signer = await provider.getSigner();
+                          const userAddress = await signer.getAddress();
+                          console.log(`User address: ${userAddress}`);
+
+                          // Call the vote function on the contract with 2 for abstain
+                          console.log('Calling vote function on contract...');
+                          const transaction = await dao.connect(signer)["vote(uint256,int8)"](proposal.id, 2);
+                          console.log('Transaction sent:', transaction.hash);
+
+                          // Wait for transaction to be mined
+                          console.log('Waiting for transaction confirmation...');
+                          const receipt = await transaction.wait();
+                          console.log('Transaction confirmed:', receipt);
+
+                          // Update vote state after successful transaction
+                          console.log('Transaction successful, updating UI state');
+
+                          // Update local state to reflect the vote
+                          const newVotes = {...userVotes};
+                          newVotes[proposalId] = true;
+                          setUserVotes(newVotes);
+                          console.log(`Abstain vote recorded for proposal ${proposalId}`);
+
+                          // Vote successful - reload data to show updated state
+                          console.log('Vote successful, reloading blockchain data...');
+                          setVotingProposalId(null);
+
+                          // Reload blockchain data to show updated proposal state
+                          await loadBlockchainData();
+
+                        // Error Handling:
+                        } catch (error) {
+                          console.error('Error voting:', error);
+
+                          // Check if the error is due to not being a token holder
+                          if (error.reason && error.reason.includes('must be token holder')) {
+                            window.alert('You must be a token holder to vote on proposals. Please acquire DAO tokens first.');
+                          } else if (error.message && error.message.includes('must be token holder')) {
+                            window.alert('You must be a token holder to vote on proposals. Please acquire DAO tokens first.');
+                          } else if (error.reason && error.reason.includes('already voted')) {
+                            window.alert('You have already voted on this proposal.');
+                          } else if (error.message && error.message.includes('user rejected')) {
+                            window.alert('Transaction was rejected by the user.');
+                          } else if (error.reason) {
+                            window.alert(`Transaction failed: ${error.reason}`);
+                          } else if (error.message) {
+                            window.alert(`Error: ${error.message}`);
+                          } else {
+                            window.alert('Transaction failed. Please check console for details.');
+                          }
+                        } finally {
+                          // Always reset loading state
+                          console.log('Resetting voting state');
+                          setVotingProposalId(null);
+                        }
+                      }}
+                    >
+                      {votingProposalId === proposal.id ? (
+                        <><Spinner as="span" animation="border" size="sm" /> Voting...</>
+                      ) : (
+                        <>🤷 Abstain</>
                       )}
                     </Button>
                     </div>

@@ -79,14 +79,14 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
         <Col md={6} lg={3}>
           <Card className="h-100">
             <Card.Body className="d-flex flex-column">
-              <Card.Title className="fs-6">Voting Distribution</Card.Title>
+              <Card.Title className="fs-6">Voting Distribution ETH</Card.Title>
               <div className="d-flex justify-content-between mb-1">
-                <small className="text-success">For: {totalPositiveVotes.toFixed(1)} ETH</small>
-                <small className="text-danger">Against: {totalNegativeVotes.toFixed(1)} ETH</small>
+                <small className="text-success">For: {totalPositiveVotes.toFixed(1)}</small>
+                <small className="text-danger">Against: {totalNegativeVotes.toFixed(1)}</small>
               </div>
               <div className="d-flex justify-content-between mb-3">
-                <small className="text-secondary">Abstain: {totalAbstainVotes.toFixed(1)} ETH</small>
-                <small className="text-muted">Total: {totalVotes.toFixed(1)} ETH</small>
+                <small className="text-secondary">Abstain: {totalAbstainVotes.toFixed(1)}</small>
+                <small className="text-muted">Total: {totalVotes.toFixed(1)}</small>
               </div>
               <div className="mt-auto">
                 <ProgressBar>
@@ -96,9 +96,9 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
                 </ProgressBar>
                 <div className="text-center mt-1">
                   <small className="text-muted">
-                    <span className="text-success">{positivePercentage.toFixed(1)}%</span> for, 
-                    <span className="text-danger">{negativePercentage.toFixed(1)}%</span> against, 
-                    <span className="text-secondary">{abstainPercentage.toFixed(1)}%</span> abstain
+                    <span className="text-success">{positivePercentage.toFixed(1)}%</span><big> 👍 &nbsp;&nbsp;</big> 
+                    <span className="text-danger"> {negativePercentage.toFixed(1)}%</span><big> 👎 &nbsp;&nbsp;</big>  
+                    <span className="text-secondary"> {abstainPercentage.toFixed(1)}%</span><big> 🤐 </big> 
                   </small>
                 </div>
               </div>

@@ -10,6 +10,7 @@ import ProposalAnalytics from './ProposalAnalytics';
 import Loading from './Loading';
 
 // Styles
+import './GlobalStyles.css';
 import './VotingStyles.css';
 
 // ABIs: Import your contract ABIs here
@@ -161,8 +162,9 @@ function App() {
   }, []);
 
   return(
-    <Container style={{ paddingTop: '80px' }}>
+    <div className="app-container">
       <Navigation account={account} walletConnected={walletConnected} />
+      <Container className="content-container" style={{ paddingTop: '44px' }}>
 
       <div className="text-center my-4">
         <h1 className='mb-2'>Welcome to our DAO!</h1>
@@ -214,6 +216,7 @@ function App() {
             provider={provider}
             dao={dao}
             setIsLoading={setIsLoading}
+            loadBlockchainData={loadBlockchainData}
           />
 
           <hr/>
@@ -236,11 +239,13 @@ function App() {
               proposals={proposals}
               quorum={quorum}
               setIsLoading={setIsLoading}
+              loadBlockchainData={loadBlockchainData}
             />
           )}
         </>
       )}
-    </Container>
+      </Container>
+    </div>
   )
 }
 

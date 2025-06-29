@@ -6,7 +6,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { ethers } from 'ethers'
 
-const Create = ({ provider, dao, setIsLoading }) => {
+const Create = ({ provider, dao, setIsLoading, loadBlockchainData }) => {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState(0)
@@ -28,9 +28,20 @@ const Create = ({ provider, dao, setIsLoading }) => {
 
       const transaction = await dao.connect(signer).createProposal(name, description, formattedAmount, address)
       await transaction.wait()
+
+      // Success - reload blockchain data to show new proposal
+      console.log('Proposal creation successful, reloading data...');
+      await loadBlockchainData();
+
+      // Clear form after successful creation
+      setName('')
+      setDescription('')
+      setAmount(0)
+      setAddress('')
+
     } catch (error) {
       console.error('Error creating proposal:', error);
-      
+
       // Check if the error is due to not being a token holder
       if (error.reason && error.reason.includes('must be token holder')) {
         window.alert('You must be a token holder to create proposals. Please acquire DAO tokens first.');
@@ -41,9 +52,10 @@ const Create = ({ provider, dao, setIsLoading }) => {
       } else {
         window.alert('Transaction failed. Please check console for details.');
       }
+    } finally {
+      // Always reset loading state
+      setIsWaiting(false);
     }
-
-    setIsLoading(true)
   }
 
   return(
@@ -81,7 +93,7 @@ const Create = ({ provider, dao, setIsLoading }) => {
         />
         <Form.Control
           type='text'
-          placeholder="Enter recipient's address"
+          placeholder="Enter recipient's address 0x..."
           className='my-2'
           onChange={(e) => setAddress(e.target.value)}
           required
