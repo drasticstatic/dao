@@ -84,19 +84,21 @@ async function main() {
   await transaction.wait()
   console.log('\u00A0\u00A0✓ Investor 3 voted against')
 
-  // Check both proposals' states
+  // Check both proposals' states (simplified version)
   const proposal6 = await dao.proposals(proposalId6)
   const proposal7 = await dao.proposals(proposalId7)
 
   console.log('\nProposal 6 Results (Cancelled):')
-  console.log(`\u00A0- Positive votes: ${ethers.utils.formatEther(proposal6.positiveVotes)} ETH`)
-  console.log(`\u00A0- Negative votes: ${ethers.utils.formatEther(proposal6.negativeVotes)} ETH`)
+  console.log(`\u00A0- Net votes: ${ethers.utils.formatEther(proposal6.votes)} ETH`)
+  console.log(`\u00A0- Name: ${proposal6.name}`)
   console.log(`\u00A0- Cancelled: ${proposal6.cancelled}`)
+  console.log(`\u00A0- Finalized: ${proposal6.finalized}`)
 
   console.log('\nProposal 7 Results (Active):')
-  console.log(`\u00A0- Positive votes: ${ethers.utils.formatEther(proposal7.positiveVotes)} ETH`)
-  console.log(`\u00A0- Negative votes: ${ethers.utils.formatEther(proposal7.negativeVotes)} ETH`)
+  console.log(`\u00A0- Net votes: ${ethers.utils.formatEther(proposal7.votes)} ETH`)
+  console.log(`\u00A0- Name: ${proposal7.name}`)
   console.log(`\u00A0- Cancelled: ${proposal7.cancelled}`)
+  console.log(`\u00A0- Finalized: ${proposal7.finalized}`)
 
   console.log('\n✓✓ Oppose voting test completed successfully! ✓✓\n');
 }

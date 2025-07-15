@@ -90,14 +90,14 @@
 }
 
 @keyframes pulse-green {
-  0% { 
-    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); 
+  0% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
   }
-  70% { 
-    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); 
+  70% {
+    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
   }
-  100% { 
-    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); 
+  100% {
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
   }
 }
 
@@ -109,16 +109,16 @@
 }
 
 @keyframes celebrate {
-  0% { 
-    transform: scale(0.9); 
-    opacity: 0.7; 
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
   }
-  50% { 
-    transform: scale(1.05); 
+  50% {
+    transform: scale(1.05);
   }
-  100% { 
-    transform: scale(1); 
-    opacity: 1; 
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -128,18 +128,18 @@
 }
 
 @keyframes gentle-pulse {
-  0%, 100% { 
-    opacity: 1; 
+  0%, 100% {
+    opacity: 1;
     border-left-color: #007bff;
   }
-  25% { 
+  25% {
     border-left-color: #28a745;
   }
-  50% { 
+  50% {
     opacity: 0.9;
     border-left-color: #ffc107;
   }
-  75% { 
+  75% {
     border-left-color: #dc3545;
   }
 }
@@ -153,11 +153,11 @@
 }
 
 @keyframes fadeInMessage {
-  0% { 
+  0% {
     opacity: 0;
     transform: translateY(-5px);
   }
-  100% { 
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
@@ -194,12 +194,12 @@
   .voting-interface {
     padding: 1rem;
   }
-  
+
   .voting-interface .btn {
     font-size: 0.875rem;
     padding: 0.5rem 1rem;
   }
-  
+
   .participation-progress {
     margin-bottom: 1rem;
   }
@@ -247,7 +247,20 @@
 .voting-button-group .btn {
   min-width: 80px;
   flex: 1;
-  max-width: 120px;
+  max-width: 111px;
+}
+
+/* Specific button margins for better spacing */
+.vote-btn-for {
+  margin-left: 7px;
+}
+
+.vote-btn-against {
+  margin-right: 7px;
+}
+
+.vote-btn-abstain {
+  margin-bottom: 8px;
 }
 
 /* Vote count badges */
@@ -307,4 +320,254 @@
   .participation-progress {
     margin-bottom: 1rem;
   }
+}
+
+/* Table container with enhanced sticky headers and proper column sizing */
+.table-container {
+  height: 80vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  border: 1px solid #dee2e6;
+  display: block;
+  min-width: 100%;
+}
+
+/* Enhanced table layout with proper column widths */
+.table-container .table {
+  margin-bottom: 0;
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  min-width: 1200px; /* Ensure enough space for all columns */
+}
+
+/* Ultra-sticky header with proper column sizing */
+.table-container thead th {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  background: #f8f9fa !important;
+  background-color: #f8f9fa !important;
+  border-bottom: 2px solid #dee2e6 !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+  padding: 1rem 0.75rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  /* Force layer creation */
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  will-change: transform !important;
+}
+
+/* Specific column widths to prevent overlap - match header exactly */
+.table-container thead th:nth-child(1) { width: 50px; min-width: 50px; max-width: 50px; text-align: center; } /* # */
+.table-container thead th:nth-child(2) { width: 200px; min-width: 200px; max-width: 200px; text-align: center; } /* Proposal Name */
+.table-container thead th:nth-child(3) { width: 88px; min-width: 88px; max-width: 88px; text-align: center; } /* Amount */
+.table-container thead th:nth-child(4) { width: 144px; min-width: 144px; max-width: 144px; text-align: center; } /* Recipient */
+.table-container thead th:nth-child(5) { width: 111px; min-width: 111px; max-width: 111px; text-align: center; } /* Recipient Balance */
+.table-container thead th:nth-child(6) { width: 222px; min-width: 222px; max-width: 222px; text-align: center; } /* Status */
+.table-container thead th:nth-child(7) { width: 222px; min-width: 222px; max-width: 222px; text-align: center; } /* Votes */
+.table-container thead th:nth-child(8) { width: 244px; min-width: 244px; max-width: 244px; text-align: center; } /* Actions */
+
+/* Apply same widths to table cells with exact matching */
+.table-container tbody td:nth-child(1) { width: 50px; min-width: 50px; max-width: 50px; text-align: center; }
+.table-container tbody td:nth-child(2) { width: 200px; min-width: 200px; max-width: 200px; text-align: left; padding-left: 8px; }
+.table-container tbody td:nth-child(3) { width: 88px; min-width: 88px; max-width: 88px; text-align: center; }
+.table-container tbody td:nth-child(4) { width: 144px; min-width: 144px; max-width: 144px; text-align: center; }
+.table-container tbody td:nth-child(5) { width: 111px; min-width: 111px; max-width: 111px; text-align: center; }
+.table-container tbody td:nth-child(6) { width: 222px; min-width: 222px; max-width: 222px; text-align: center; }
+.table-container tbody td:nth-child(7) { width: 222px; min-width: 222px; max-width: 222px; text-align: center; }
+.table-container tbody td:nth-child(8) { width: 244px; min-width: 244px; max-width: 244px; text-align: center; }
+
+/* Ensure background covers completely */
+.table-container thead th::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f8f9fa;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Browser-specific fixes */
+@supports (-webkit-appearance: none) {
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-container thead th {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Firefox specific fixes */
+@-moz-document url-prefix() {
+  .table-container thead th {
+    background-attachment: local;
+    background-image: linear-gradient(#f8f9fa, #f8f9fa);
+  }
+}
+
+/* Enhanced sticky header mobile styles */
+.table-header-fixed {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .table-header-fixed {
+    font-size: 0.8rem;
+    border-radius: 6px 6px 0 0;
+  }
+
+  .table-header-fixed > div {
+    min-width: 800px; /* Ensure header scrolls horizontally */
+    padding: 0.75rem 0.5rem;
+  }
+
+  .table-header-fixed > div > div {
+    font-size: 0.75rem;
+    padding: 0 0.25rem;
+  }
+
+  .table-container {
+    height: 60vh;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-container .table {
+    min-width: 800px; /* Match header width */
+  }
+
+  /* Adjust column widths for mobile */
+  .table-container thead th:nth-child(1) { width: 50px; min-width: 50px; }
+  .table-container thead th:nth-child(2) { width: 200px; min-width: 200px; }
+  .table-container thead th:nth-child(3) { width: 88px; min-width: 88px; }
+  .table-container thead th:nth-child(4) { width: 144px; min-width: 144px; }
+  .table-container thead th:nth-child(5) { width: 111px; min-width: 111px; }
+  .table-container thead th:nth-child(6) { width: 222px; min-width: 222px; }
+  .table-container thead th:nth-child(7) { width: 222px; min-width: 222px; }
+  .table-container thead th:nth-child(8) { width: 244px; min-width: 244px; }
+
+  /* Ultimate table alignment solution - Force exact column widths */
+  .table-container {
+    overflow-x: auto !important;
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  /* Remove scroll instruction from table - moved to hidden header */
+
+  .table-container table {
+    table-layout: fixed !important;
+    width: 1281px !important; /* Exact width to match header */
+    border-collapse: collapse !important;
+    margin: 0 !important;
+  }
+
+  .table-container tbody tr {
+    display: table-row !important;
+  }
+
+  .table-container tbody td {
+    padding: 8px 4px !important;
+    border: 1px solid #dee2e6 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    height: 50px !important;
+    vertical-align: middle !important;
+  }
+
+  /* Force exact column widths with colgroup */
+  .table-container colgroup col:nth-child(1) { width: 50px !important; }
+  .table-container colgroup col:nth-child(2) { width: 200px !important; }
+  .table-container colgroup col:nth-child(3) { width: 88px !important; }
+  .table-container colgroup col:nth-child(4) { width: 144px !important; }
+  .table-container colgroup col:nth-child(5) { width: 111px !important; }
+  .table-container colgroup col:nth-child(6) { width: 222px !important; }
+  .table-container colgroup col:nth-child(7) { width: 222px !important; }
+  .table-container colgroup col:nth-child(8) { width: 244px !important; }
+
+  .table-container tbody td:nth-child(1) { width: 50px !important; text-align: center !important; }
+  .table-container tbody td:nth-child(2) {
+    width: 200px !important;
+    text-align: left !important;
+    white-space: normal !important; /* Allow text wrapping in proposal name */
+    word-wrap: break-word !important;
+  }
+  .table-container tbody td:nth-child(3) { width: 88px !important; text-align: center !important; }
+  .table-container tbody td:nth-child(4) { width: 144px !important; text-align: center !important; }
+  .table-container tbody td:nth-child(5) { width: 111px !important; text-align: center !important; }
+  .table-container tbody td:nth-child(6) { width: 222px !important; text-align: center !important; }
+  .table-container tbody td:nth-child(7) { width: 222px !important; text-align: center !important; }
+  .table-container tbody td:nth-child(8) {
+    width: 244px !important;
+    text-align: center !important;
+    white-space: normal !important; /* Allow action buttons to wrap properly */
+  }
+
+  .table-container thead th,
+  .table-container tbody td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.85rem;
+  }
+
+  /* Mobile-specific fixes */
+  @media (max-width: 768px) {
+    .table-container tbody td:nth-child(2) {
+      white-space: normal !important;
+      word-wrap: break-word !important;
+      line-height: 1.3 !important;
+      padding: 8px 4px !important;
+    }
+
+    .table-container tbody td:nth-child(8) {
+      white-space: normal !important;
+      padding: 4px 2px !important;
+    }
+
+    .table-container tbody td:nth-child(8) .btn {
+      font-size: 0.7rem !important;
+      padding: 2px 6px !important;
+      margin: 1px !important;
+    }
+
+
+  }
+}
+
+/* External header table styling to match main table exactly */
+.external-table-header table {
+  border-collapse: collapse !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.external-table-header th:nth-child(1) { width: 50px !important; min-width: 50px !important; max-width: 50px !important; text-align: center; }
+.external-table-header th:nth-child(2) { width: 200px !important; min-width: 200px !important; max-width: 200px !important; text-align: center; }
+.external-table-header th:nth-child(3) { width: 88px !important; min-width: 88px !important; max-width: 88px !important; text-align: center; }
+.external-table-header th:nth-child(4) { width: 144px !important; min-width: 144px !important; max-width: 144px !important; text-align: center; }
+.external-table-header th:nth-child(5) { width: 111px !important; min-width: 111px !important; max-width: 111px !important; text-align: center; }
+.external-table-header th:nth-child(6) { width: 222px !important; min-width: 222px !important; max-width: 222px !important; text-align: center; }
+.external-table-header th:nth-child(7) { width: 222px !important; min-width: 222px !important; max-width: 222px !important; text-align: center; }
+.external-table-header th:nth-child(8) { width: 244px !important; min-width: 244px !important; max-width: 244px !important; text-align: center; }
+
+/* Table progress bars */
+.table-progress-bar {
+  background-color: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
 }

@@ -53,16 +53,15 @@ async function main() {
   await transaction.wait()
   console.log('\u00A0\u00A0✓ Investor 3 voted in favor (200k tokens)')
 
-  // Check proposal state
+  // Check proposal state (simplified version)
   const proposal = await dao.proposals(proposalId)
   const quorum = await dao.quorum()
-  
-  console.log('\nProposal Results:')
-  console.log(`\u00A0- Positive votes: ${ethers.utils.formatEther(proposal.positiveVotes)} ETH`)
-  console.log(`\u00A0- Negative votes: ${ethers.utils.formatEther(proposal.negativeVotes)} ETH`)
-  console.log(`\u00A0- Abstain votes: ${ethers.utils.formatEther(proposal.abstainVotes)} ETH`)
+
+  console.log('\nProposal Results (Simplified Contract):')
   console.log(`\u00A0- Net votes: ${ethers.utils.formatEther(proposal.votes)} ETH`)
-  console.log(`\u00A0- Total participation: ${ethers.utils.formatEther(proposal.totalParticipation)} ETH`)
+  console.log(`\u00A0- Proposal name: ${proposal.name}`)
+  console.log(`\u00A0- Amount requested: ${ethers.utils.formatEther(proposal.amount)} ETH`)
+  console.log(`\u00A0- Recipient: ${proposal.recipient}`)
   console.log(`\u00A0- Quorum required: ${ethers.utils.formatEther(quorum)} ETH`)
   console.log(`\u00A0- Finalized: ${proposal.finalized}`)
   console.log(`\u00A0- Cancelled: ${proposal.cancelled}`)
@@ -72,12 +71,12 @@ async function main() {
   const quorumMet = netVotes.gte(quorum)
   console.log(`\u00A0- Quorum met for finalization: ${quorumMet} ✓`)
 
-  // Test participation rate
+  // Test participation rate (simplified implementation)
   const participationRate = await dao.getParticipationRate(proposalId)
   console.log(`\u00A0- Participation rate: ${participationRate}%`)
 
   console.log('\n🤩 Proposal is ready for finalization! 🤩')
-  console.log('✓✓ Ready-to-finalize test completed successfully! ✓✓\n');
+  console.log('\n✓✓ Ready-to-finalize test completed successfully! ✓✓\n');
 }
 
 main().catch((error) => {

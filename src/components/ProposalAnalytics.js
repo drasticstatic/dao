@@ -14,39 +14,39 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
       </div>
     );
   }
-  
+
   // Calculate analytics data
   const totalProposals = proposals.length;
   const finalizedProposals = proposals.filter(p => p.finalized).length;
   const cancelledProposals = proposals.filter(p => p.cancelled).length;
   const activeProposals = totalProposals - finalizedProposals - cancelledProposals;
-  
-  // Calculate total votes
-  const totalPositiveVotes = proposals.reduce((sum, p) => 
-    sum + Number(ethers.utils.formatEther(p.positiveVotes || 0)), 0);
-  const totalNegativeVotes = proposals.reduce((sum, p) => 
-    sum + Number(ethers.utils.formatEther(p.negativeVotes || 0)), 0);
-  const totalAbstainVotes = proposals.reduce((sum, p) => 
+
+  // Calculate total votes using actual contract fields
+  const totalPositiveVotes = proposals.reduce((sum, p) =>
+    sum + Number(ethers.utils.formatEther(p.forVotes || 0)), 0);
+  const totalNegativeVotes = proposals.reduce((sum, p) =>
+    sum + Number(ethers.utils.formatEther(p.againstVotes || 0)), 0);
+  const totalAbstainVotes = proposals.reduce((sum, p) =>
     sum + Number(ethers.utils.formatEther(p.abstainVotes || 0)), 0);
   const totalVotes = totalPositiveVotes + totalNegativeVotes + totalAbstainVotes;
-  
+
   // Calculate percentages
   const positivePercentage = totalVotes > 0 ? (totalPositiveVotes / totalVotes) * 100 : 0;
   const negativePercentage = totalVotes > 0 ? (totalNegativeVotes / totalVotes) * 100 : 0;
   const abstainPercentage = totalVotes > 0 ? (totalAbstainVotes / totalVotes) * 100 : 0;
-  
+
   // Calculate average votes per proposal
   const avgVotesPerProposal = totalProposals > 0 ? totalVotes / totalProposals : 0;
-  
+
   // Calculate quorum success rate
-  const proposalsReachedQuorum = proposals.filter(p => 
-    Number(ethers.utils.formatEther(p.positiveVotes || 0)) >= Number(ethers.utils.formatEther(quorum))).length;
+  const proposalsReachedQuorum = proposals.filter(p =>
+    Number(ethers.utils.formatEther(p.forVotes || 0)) >= Number(ethers.utils.formatEther(quorum))).length;
   const quorumSuccessRate = totalProposals > 0 ? (proposalsReachedQuorum / totalProposals) * 100 : 0;
 
   return (
     <div className="mb-4">
       <h4 className="mb-3">Proposal Analytics</h4>
-      
+
       <Row className="g-3">
         <Col md={6} lg={3}>
           <Card className="h-100">
@@ -75,7 +75,7 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
             </Card.Body>
           </Card>
         </Col>
-        
+
         <Col md={6} lg={3}>
           <Card className="h-100">
             <Card.Body className="d-flex flex-column">
@@ -96,16 +96,16 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
                 </ProgressBar>
                 <div className="text-center mt-1">
                   <small className="text-muted">
-                    <span className="text-success">{positivePercentage.toFixed(1)}%</span><big> 👍 &nbsp;&nbsp;</big> 
-                    <span className="text-danger"> {negativePercentage.toFixed(1)}%</span><big> 👎 &nbsp;&nbsp;</big>  
-                    <span className="text-secondary"> {abstainPercentage.toFixed(1)}%</span><big> 🤐 </big> 
+                    <span className="text-success">{positivePercentage.toFixed(1)}%</span><big> 👍 &nbsp;&nbsp;</big>
+                    <span className="text-danger"> {negativePercentage.toFixed(1)}%</span><big> 👎 &nbsp;&nbsp;</big>
+                    <span className="text-secondary"> {abstainPercentage.toFixed(1)}%</span><big> 🤐 </big>
                   </small>
                 </div>
               </div>
             </Card.Body>
           </Card>
         </Col>
-        
+
         <Col md={6} lg={3}>
           <Card className="h-100">
             <Card.Body className="d-flex flex-column">
@@ -115,9 +115,9 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
                 <small className="text-muted">{proposalsReachedQuorum} of {totalProposals} proposals reached quorum</small>
               </div>
               <div className="mt-auto">
-                <ProgressBar 
-                  variant={quorumSuccessRate > 66 ? "success" : quorumSuccessRate > 33 ? "warning" : "danger"} 
-                  now={quorumSuccessRate} 
+                <ProgressBar
+                  variant={quorumSuccessRate > 66 ? "success" : quorumSuccessRate > 33 ? "warning" : "danger"}
+                  now={quorumSuccessRate}
                 />
                 <div className="text-center mt-1">
                   <small className="text-muted">
@@ -128,7 +128,7 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
             </Card.Body>
           </Card>
         </Col>
-        
+
         <Col md={6} lg={3}>
           <Card className="h-100">
             <Card.Body className="d-flex flex-column">
@@ -138,9 +138,9 @@ const ProposalAnalytics = ({ proposals, quorum }) => {
                 <small className="text-muted">Average votes per proposal</small>
               </div>
               <div className="mt-auto">
-                <ProgressBar 
-                  variant="info" 
-                  now={Math.min(100, (avgVotesPerProposal / Number(ethers.utils.formatEther(quorum))) * 100)} 
+                <ProgressBar
+                  variant="info"
+                  now={Math.min(100, (avgVotesPerProposal / Number(ethers.utils.formatEther(quorum))) * 100)}
                 />
                 <div className="text-center mt-1">
                   <small className="text-muted">

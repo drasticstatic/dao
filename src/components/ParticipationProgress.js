@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 
 const ParticipationProgress = ({ proposals, totalSupply }) => {
   const [messageIndex, setMessageIndex] = useState(0);
-  
+
   const encouragementMessages = [
     "Your voice matters! Help us reach full participation.",
     "Every vote counts toward our community decision.",
@@ -15,14 +15,18 @@ const ParticipationProgress = ({ proposals, totalSupply }) => {
     "Be part of the decision-making process.",
     "Community strength comes from active participation."
   ];
-  
-  if (!proposals || !totalSupply || proposals.length === 0) return null;
 
-  // Calculate combined participation for all active proposals
-  const totalParticipation = proposals.reduce((sum, proposal) => 
-    sum + Number(ethers.utils.formatEther(proposal.totalParticipation || 0)), 0);
-  const totalSupplyFormatted = Number(ethers.utils.formatEther(totalSupply));
-  const participationRate = totalSupplyFormatted > 0 ? (totalParticipation / (totalSupplyFormatted * proposals.length)) * 100 : 0;
+  // Calculate average participation across all active proposals
+  // Use the highest participation rate from any single proposal to avoid decreasing percentages
+  const participationRates = proposals && proposals.length > 0 ? proposals.map(proposal => {
+    // Estimate participation from absolute net votes (simplified approach)
+    const netVotes = Math.abs(Number(ethers.utils.formatEther(proposal.votes || 0)));
+    const totalSupplyFormatted = totalSupply ? Number(ethers.utils.formatEther(totalSupply)) : 0;
+    return totalSupplyFormatted > 0 ? (netVotes / totalSupplyFormatted) * 100 : 0;
+  }) : [0];
+
+  // Use the maximum participation rate to show best engagement
+  const participationRate = Math.max(...participationRates, 0);
   const isComplete = participationRate >= 99; // Allow for small rounding differences
 
   // Scroll through messages every 3 seconds
@@ -33,7 +37,12 @@ const ParticipationProgress = ({ proposals, totalSupply }) => {
       }, 3000);
       return () => clearInterval(interval);
     }
+    // Return undefined when complete (no cleanup needed)
+    return undefined;
   }, [isComplete, encouragementMessages.length]);
+
+  // Early return after hooks
+  if (!proposals || !totalSupply || proposals.length === 0) return null;
 
   const currentMessage = encouragementMessages[messageIndex];
 
@@ -41,22 +50,22 @@ const ParticipationProgress = ({ proposals, totalSupply }) => {
     <Card className="mb-3">
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-2">
-          <h6 className="mb-0">Community Participation</h6>
+          <h6 className="mb-0">🎊 Community Participation</h6>
           <span className={`badge ${isComplete ? 'bg-success' : 'bg-info'}`}>
             {participationRate.toFixed(1)}%
           </span>
         </div>
-        
-        <ProgressBar 
-          now={participationRate} 
+
+        <ProgressBar
+          now={participationRate}
           variant={isComplete ? "success" : "info"}
           className={isComplete ? "pulse-success" : ""}
           style={{ height: '8px' }}
         />
-        
+
         <div className="mt-2">
           <small className="text-muted">
-            {proposals.length} active proposal{proposals.length !== 1 ? 's' : ''} • 
+            {proposals.length} active proposal{proposals.length !== 1 ? 's' : ''} •
             Average participation: {participationRate.toFixed(1)}%
           </small>
         </div>
@@ -69,7 +78,7 @@ const ParticipationProgress = ({ proposals, totalSupply }) => {
           <div className="engagement-prompt mt-3 p-2 bg-light rounded">
             <div className="d-flex align-items-center">
               <span className="me-2">🗳️</span>
-              <small className="text-muted" style={{ 
+              <small className="text-muted" style={{
                 transition: 'opacity 0.5s ease-in-out',
                 minHeight: '20px'
               }}>

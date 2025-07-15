@@ -21,6 +21,8 @@ body {
 }
 
 /* Content container with soft background */
+/* Note: Width synced to table width (1281px) + padding (60px) + margin (40px) = 1381px */
+/* Although 1344px is the desired look */
 .content-container {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -30,7 +32,7 @@ body {
   padding: 30px;
   min-height: calc(100vh - 40px);
   width: 100%;
-  max-width: 1313px;
+  max-width: 1344px !important; /* Synced to table width + padding */
 }
 
 /* Enhanced card styling for better visual appeal */
@@ -124,13 +126,69 @@ body {
   border-radius: 20px;
 }
 
-/* Action buttons container */
+/* Action buttons container - narrower for cleaner layout */
 .action-buttons {
-  min-width: 200px;
+  min-width: 140px;
+  max-width: 160px;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   align-items: center;
+}
+
+/* Actions column styling */
+.actions-column {
+  width: 244px !important;
+  max-width: 244px !important;
+  min-width: 244px !important;
+}
+
+/* Votes column styling */
+.votes-column {
+  width: 222px !important;
+  max-width: 222px !important;
+  min-width: 222px !important;
+}
+
+/* Mobile notifications dropdown centering */
+@media (max-width: 768px) {
+  .notifications-dropdown {
+    position: fixed !important;
+    top: 60px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: auto !important;
+    width: 90vw !important;
+    max-width: 350px !important;
+    z-index: 9999 !important;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+  }
+}
+
+/* Sticky table header */
+.sticky-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background-color: white !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.sticky-header th {
+  position: sticky !important;
+  top: 0 !important;
+  background-color: white !important;
+  z-index: 100 !important;
+  border-bottom: 2px solid #dee2e6 !important;
+}
+
+/* Table container for better scrolling */
+.table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  position: relative;
 }
 
 /* Voted badge styling */
@@ -151,11 +209,11 @@ body {
     padding: 20px;
     min-height: calc(100vh - 20px);
   }
-  
+
   .proposals-table {
     font-size: 0.8rem;
   }
-  
+
   .action-buttons {
     min-width: 150px;
   }

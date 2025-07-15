@@ -1,5 +1,6 @@
 const hre = require("hardhat");
 const config = require('../src/config.json')
+const { ethers } = hre
 
 const tokens = (n) => {
   return ethers.utils.parseUnits(n.toString(), 'ether')
@@ -26,7 +27,7 @@ async function main() {
   let transaction = await dao.connect(investor1).createProposal(
     '*Abstaining & Unfinalized* |Test| - Deployed w/ Quorum=notMet + notFinalized',
     'Testing the abstain voting functionality with mixed voting choices',
-    tokens(50),
+    tokens(40),
     recipient.address
   )
   await transaction.wait()
@@ -49,15 +50,17 @@ async function main() {
   await transaction.wait()
   console.log('\u00A0\u00A0✓ Regular vote cast')
 
-  // Check proposal state
+  // Check proposal state (simplified version)
   const proposal = await dao.proposals(proposalId)
   console.log('\nProposal Results:')
-  console.log(`\u00A0- Positive votes: ${ethers.utils.formatEther(proposal.positiveVotes)} ETH`)
-  console.log(`\u00A0- Negative votes: ${ethers.utils.formatEther(proposal.negativeVotes)} ETH`)
-  console.log(`\u00A0- Abstain votes: ${ethers.utils.formatEther(proposal.abstainVotes)} ETH`)
-  console.log(`\u00A0- Total participation: ${ethers.utils.formatEther(proposal.totalParticipation)} ETH`)
+  console.log(`\u00A0- Net votes: ${ethers.utils.formatEther(proposal.votes)} ETH`)
+  console.log(`\u00A0- Proposal ID: ${proposal.id}`)
+  console.log(`\u00A0- Name: ${proposal.name}`)
+  console.log(`\u00A0- Amount: ${ethers.utils.formatEther(proposal.amount)} ETH`)
+  console.log(`\u00A0- Finalized: ${proposal.finalized}`)
+  console.log(`\u00A0- Cancelled: ${proposal.cancelled}`)
 
-  // Test participation rate
+  // Test participation rate (simplified implementation)
   const participationRate = await dao.getParticipationRate(proposalId)
   console.log(`\u00A0- Participation rate: ${participationRate}%`)
 

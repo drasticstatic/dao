@@ -6,6 +6,7 @@
 // global scope, and execute the script.
 const hre = require("hardhat");
 const config = require('../src/config.json')
+const { ethers } = hre
 
 const tokens = (n) => {
   return ethers.utils.parseUnits(n.toString(), 'ether')
@@ -21,7 +22,7 @@ async function main() {
   const investor1 = accounts[1]
   const investor2 = accounts[2]
   const investor3 = accounts[3]
-  const recipient = accounts[4]
+  // const recipient = accounts[4]
 
   let transaction
 
@@ -55,64 +56,19 @@ async function main() {
   await transaction.wait()
   console.log(`\u00A0\u00A0✓ Sent funds to dao treasury...\n`)
 
-  for (var i = 0; i < 3; i++) {
-      // Create Proposal
-        // All 3 investors vote in favor, then finalize each proposal
-      transaction = await dao.connect(investor1).createProposal(
-        `*Approved & Finalized* |Test| Proposal ${i + 1} - Deployed w/ Quorum=inFavor + Finalized`,
-        `Proposals 1 thru 3 are tests where all 3 investors vote in favor with the proposal automatically finalized upon deployment`,
-        ether(50), recipient.address)
-      await transaction.wait()
-
-      // Vote 1 - in favor
-      transaction = await dao.connect(investor1)["vote(uint256,bool)"](i + 1, true)
-      await transaction.wait()
-
-      // Vote 2 - in favor
-      transaction = await dao.connect(investor2)["vote(uint256,bool)"](i + 1, true)
-      await transaction.wait()
-
-      // Vote 3 - in favor
-      transaction = await dao.connect(investor3)["vote(uint256,bool)"](i + 1, true)
-      await transaction.wait()
-
-      // Finalize
-      transaction = await dao.connect(investor1).finalizeProposal(i + 1)
-      await transaction.wait()
-
-      console.log(`\u00A0\u00A0\u00A0✓ Created & Finalized Proposal ${i + 1}\n`)
-  }
-
-    console.log(`\u00A0\u00A0\u00A0Creating Proposal 4 w/out meeting quorum & unfinalized...\n`)
-
-    // Create a 4th proposal
-      // Where only 2 investors vote (not enough for quorum)
-        // Intentionally NOT finalized for user interaction
-    transaction = await dao.connect(investor1).createProposal(
-      `*Unfinished & Unfinalized* |Test| - Deployed w/ Quorum=notMet + notFinalized`,
-      `Proposal 4 is intentionally not finalized so users can intially interact with it upon deployment`,
-      ether(50), recipient.address)
-    await transaction.wait()
-
-    // Vote 1 - in favor
-    transaction = await dao.connect(investor2)["vote(uint256,bool)"](4, true)
-    await transaction.wait()
-
-    // Vote 2 - in favor
-    transaction = await dao.connect(investor3)["vote(uint256,bool)"](4, true)
-    await transaction.wait()
-    
-    // Note: We intentionally do not finalize Proposal 4 so users can interact with it
-
     console.log(`\u00A0\u00A0✓✓✓ Seed.js is Complete! ✓✓✓\n`)
-    console.log("\nNext steps:\n")
+    console.log("\nNext steps: (optional to render test proposals)\n")
+    console.log("\u00A0npx hardhat run scripts/test-initial-proposals.js --network...\n")
     console.log("\u00A0npx hardhat run scripts/test-abstain.js --network...\n")
-    console.log("\u00A0\u00A0&\n")
     console.log("\u00A0npx hardhat run scripts/test-oppose.js --network...\n")
-    console.log("\u00A0\u00A0&\n")
     console.log("\u00A0npx hardhat run scripts/test-ready-cancel.js --network...\n")
-    console.log("\u00A0\u00A0&\n")
     console.log("\u00A0npx hardhat run scripts/test-ready finalize.js --network...\n")
+    console.log("\u00A0npx hardhat run scripts/test-additional-proposals.js --network...\n")
+    console.log(`\n=== CLEAN SLATE START ALTERNATIVE: ===`)
+    console.log(`\u00A0For a clean DAO without test proposals:\n`)
+    console.log(`\u00A0\u00A01. Skip all test scripts`)
+    console.log(`\u00A0\u00A02. Start frontend: npm start`)
+    console.log(`\u00A0\u00A03. Create your own proposals and test voting\n`)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

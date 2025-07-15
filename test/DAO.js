@@ -137,12 +137,12 @@ describe('DAO', () => {
 
       it('updates vote count', async () => {
         const proposal = await dao.proposals(1)
-        expect(proposal.positiveVotes).to.equal(tokens(200000))
+        expect(proposal.votes).to.equal(tokens(200000))
       })
 
       it('emits vote event', async () => {
         await expect(transaction).to.emit(dao, "Vote")
-          .withArgs(1, investor1.address, true)
+          .withArgs(1, investor1.address, 1)
       })
 
     })
@@ -180,7 +180,7 @@ describe('DAO', () => {
 
       it('updates negative vote count', async () => {
         const proposal = await dao.proposals(1)
-        expect(proposal.negativeVotes).to.equal(tokens(200000))
+        expect(proposal.votes).to.equal(tokens(-200000))
       })
 
       it('updates net votes correctly', async () => {
@@ -190,7 +190,7 @@ describe('DAO', () => {
 
       it('emits vote event with false', async () => {
         await expect(transaction).to.emit(dao, "Vote")
-          .withArgs(1, investor1.address, false)
+          .withArgs(1, investor1.address, -1)
       })
 
     })
@@ -246,7 +246,7 @@ describe('DAO', () => {
         transaction = await dao.connect(investor1)["vote(uint256,bool)"](2, false)
         await transaction.wait()
 
-        await expect(dao.connect(investor1).cancelProposal(2)).to.be.revertedWith('against votes must reach quorum to cancel proposal')
+        await expect(dao.connect(investor1).cancelProposal(2)).to.be.revertedWith('must reach quorum to cancel proposal')
       })
 
       it('rejects cancellation from non-investor', async () => {
