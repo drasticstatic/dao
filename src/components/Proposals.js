@@ -2446,21 +2446,24 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading, loadBlockch
                   <div className="col-md-6">
                     <p className="mb-1"><strong>Proposal 1:</strong> &nbsp;&nbsp;&nbsp;&nbsp;ex: "Upgrade Smart Contract Security"</p>
                     <p className="mb-2" style={{ fontSize: '0.9rem', color: '#666' }}>
-                      • Deployer (0xf39F...) voted <span className="badge bg-success">FOR</span> (400K tokens)<br/>
                       • Investor 1 (0x7099...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
+                      • Investor 2 (0x3C44...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
+                      • Investor 3 (0x90F7...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
                       • <strong>Total: 600K 👍 → Finalized ✅</strong>
                     </p>
                     <p className="mb-1"><strong>Proposal 2:</strong> &nbsp;&nbsp;&nbsp;&nbsp;ex: "Implement New Governance Features"</p>
                     <p className="mb-2" style={{ fontSize: '0.9rem', color: '#666' }}>
-                      • Deployer (0xf39F...) voted <span className="badge bg-success">FOR</span> (400K tokens)<br/>
+                      • Investor 1 (0x7099...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
                       • Investor 2 (0x3C44...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
+                      • Investor 3 (0x90F7...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
                       • <strong>Total: 600K 👍 → Finalized ✅</strong>
                     </p>
                   </div>
                   <div className="col-md-6">
                     <p className="mb-1"><strong>Proposal 3:</strong> &nbsp;&nbsp;&nbsp;&nbsp;ex: "Treasury Management Protocol"</p>
                     <p className="mb-2" style={{ fontSize: '0.9rem', color: '#666' }}>
-                      • Deployer (0xf39F...) voted <span className="badge bg-success">FOR</span> (400K tokens)<br/>
+                      • Investor 1 (0x7099...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
+                      • Investor 2 (0x3C44...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
                       • Investor 3 (0x90F7...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
                       • <strong>Total: 600K 👍 → Finalized ✅</strong>
                     </p>
@@ -2468,7 +2471,7 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading, loadBlockch
                     <p className="mb-2" style={{ fontSize: '0.9rem', color: '#666' }}>
                       • Investor 2 (0x3C44...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
                       • Investor 3 (0x90F7...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
-                      • <strong>Total: 400K 👍 → Active (needs 100K more)</strong>
+                      • <strong>Total: 400K 👍 → Active for user interaction (100K more needed)</strong>
                     </p>
                   </div>
                 </div>
@@ -2480,14 +2483,14 @@ const Proposals = ({ provider, dao, proposals, quorum, setIsLoading, loadBlockch
                 borderRadius: '8px',
                 border: '1px solid #f8bbd9'
               }}>
-                <h6 className="mb-2" style={{ color: '#e65100', fontWeight: 'bold' }}>🤔 test-abstain.js</h6>
+                <h6 className="mb-2" style={{ color: '#e65100', fontWeight: 'bold' }}>🤔 test-abstain.js (neutral stance)</h6>
                 <div className="row">
                   <div className="col-12">
                     <p className="mb-1"><strong>Proposal 5:</strong> &nbsp;&nbsp;&nbsp;&nbsp;ex: "Controversial Policy Change" or "Uncertain Market Strategy"</p>
                     <p className="mb-2" style={{ fontSize: '0.9rem', color: '#666' }}>
                       • Investor 1 (0x7099...) voted <span className="badge bg-secondary">ABSTAIN</span> (200K tokens)<br/>
                       • Investor 2 (0x3C44...) voted <span className="badge bg-success">FOR</span> (200K tokens)<br/>
-                      • <strong>Total: 200K 👍 | 200K 🤐 → Active (testing abstain functionality - neutral stance)</strong>
+                      • <strong>Total: 200K 👍 | 200K 🤐 → Active (quorum not met)</strong>
                     </p>
                   </div>
                 </div>
