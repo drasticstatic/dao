@@ -2,7 +2,12 @@
 
 A production-ready decentralized autonomous organization (DAO) where token holders can create, vote on, and finalize funding proposals with advanced voting mechanisms, community features, and comprehensive analytics.
 
-## Key Components
+#### Screenshot of Startup Screen:
+&nbsp;&nbsp;&nbsp;&nbsp;<em>(see end of readme for additional screenshots)</em>
+
+![Welcome-to-our-DAO](/screenshots/Welcome-to-our-DAO.png)
+
+## 🔑 Key Components
 ### 🔗 Smart Contract Features
 
 - **Token Integration**: Uses ERC-20 token for governance rights
@@ -286,3 +291,14 @@ JSON.parse(localStorage.getItem('daoNotifications') || '[]')
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Additional Screenshots:
+
+![Engagement-Leaderboard-Analytics](/screenshots/Engagement-Leaderboard-Analytics.png)
+![Proposals|Governance9-12](/screenshots/Proposals|Governance9-12.png)
+![Proposals|Governance2-6](/screenshots/Proposals|Governance2-6.png)
+![Test-Voting-Senarios](/screenshots/Test-Voting-Senarios.png)
+![DemoSetup-desktop](/screenshots/DemoSetup-desktop.png)
+![DemoSetup_mobile1](/screenshots/DemoSetup_mobile1.png)
+![DemoSetup_mobile2](/screenshots/DemoSetup_mobile2.png)
+![Notifications_mobile](/screenshots/Notifications_mobile.png)
+![Success_votedFor_mobile](/screenshots/Success_votedFor_mobile.png)
