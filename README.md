@@ -1,5 +1,7 @@
 # 🏛️ Enhanced DAO Governance Platform
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey?style=flat)](https://github.com/drasticstatic/.github)
+
 A production-ready decentralized autonomous organization (DAO) where token holders can create, vote on, and finalize funding proposals with advanced voting mechanisms, community features, and comprehensive analytics.
 
 #### &nbsp;&nbsp;&nbsp;&nbsp;Screenshot of Startup Screen (w/ test data):
