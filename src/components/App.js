@@ -357,7 +357,9 @@ function App() {
       setAccount(addr)
       setWalletConnected(true)
 
-      if (!IS_GH_PAGES) {
+      if (IS_GH_PAGES) {
+        window.location.reload()
+      } else {
         setIsLoading(true)
         loadBlockchainData()
       }
@@ -543,20 +545,18 @@ function App() {
     // Listen for account changes
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', (accounts) => {
-        if (accounts.length > 0) {
+        if (IS_GH_PAGES) {
+          window.location.reload()
+        } else if (accounts.length > 0) {
           const addr = ethers.utils.getAddress(accounts[0])
           setAccount(addr)
           setWalletConnected(true)
-          if (!IS_GH_PAGES) {
-            setIsLoading(true)
-            loadBlockchainData()
-          }
+          setIsLoading(true)
+          loadBlockchainData()
         } else {
           setWalletConnected(false)
           setAccount("")
-          if (!IS_GH_PAGES) {
-            setProposals(null)
-          }
+          setProposals(null)
           setIsLoading(false)
         }
       })
