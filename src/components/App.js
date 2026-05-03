@@ -641,16 +641,22 @@ function App() {
             quorum={quorum}
           />
 
-          <Proposals
-            provider={provider}
-            dao={dao}
-            proposals={proposals || []}
-            quorum={quorum}
-            setIsLoading={setIsLoading}
-            loadBlockchainData={loadBlockchainData}
-            proposalCreationSuccess={proposalCreationSuccess}
-            setProposalCreationSuccess={setProposalCreationSuccess}
-          />
+          {quorum ? (
+            <Proposals
+              provider={provider}
+              dao={dao}
+              proposals={proposals || []}
+              quorum={quorum}
+              setIsLoading={setIsLoading}
+              loadBlockchainData={loadBlockchainData}
+              proposalCreationSuccess={proposalCreationSuccess}
+              setProposalCreationSuccess={setProposalCreationSuccess}
+            />
+          ) : (
+            <div className="text-center text-muted my-5">
+              <p>Proposals load when connected to a local Hardhat node with contracts deployed.</p>
+            </div>
+          )}
         </>
       )}
       </Container>
