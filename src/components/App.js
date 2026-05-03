@@ -8,6 +8,7 @@ import Create from './Create';
 import Proposals from './Proposals';
 import ProposalAnalytics from './ProposalAnalytics';
 import Loading from './Loading';
+import GHPagesBanner from './GHPagesBanner';
 
 // Styles
 import './GlobalStyles.css';
@@ -576,6 +577,7 @@ function App() {
 
   return(
     <div className="app-container">
+      <GHPagesBanner />
       <Navigation
         account={account}
         walletConnected={walletConnected}
@@ -592,22 +594,22 @@ function App() {
         </p>
       </div>
 
-      {!window.ethereum ? (
-        <Alert variant="warning" className="text-center">
-          <h4>MetaMask Required</h4>
-          <p>Please install MetaMask to use this DAO application.</p>
-        </Alert>
-      ) : !walletConnected ? (
-        <div className="text-center">
-          <Alert variant="info">
-            <h4>Connect Your Wallet</h4>
-            <p>Please connect your MetaMask wallet to interact with the DAO.</p>
-          </Alert>
-          <Button variant="primary" size="lg" onClick={connectWallet}>
-            Connect Wallet
-          </Button>
+      {(!window.ethereum || !walletConnected) && !isLoading && !error && (
+        <div className="text-center mb-3">
+          {!window.ethereum ? (
+            <Alert variant="info" className="d-inline-block px-4">
+              No wallet detected — browsing in read-only mode.
+              Install <a href="https://metamask.io/" target="_blank" rel="noopener noreferrer">MetaMask</a> to interact.
+            </Alert>
+          ) : (
+            <Button variant="outline-primary" onClick={connectWallet}>
+              Connect Wallet to Interact
+            </Button>
+          )}
         </div>
-      ) : error ? (
+      )}
+
+      {error ? (
         <div className="text-center">
           <Alert variant="danger">
             <h4>Error Loading Data</h4>
