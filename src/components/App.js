@@ -609,27 +609,16 @@ function App() {
         </div>
       )}
 
-      {error ? (
-        <div className="text-center">
-          <Alert variant="danger">
-            <h4>Error Loading Data</h4>
-            <p>{error}</p>
-            <p className="mb-3">Please ensure:</p>
-            <ul className="text-start">
-              <li>Hardhat node is running: <code>npx hardhat node</code></li>
-              <li>Contracts are deployed: <code>npx hardhat run scripts/deploy.js --network localhost</code></li>
-              <li>MetaMask is connected to localhost:8545</li>
-            </ul>
-          </Alert>
-          <Button variant="primary" onClick={() => {
-            setError(null)
-            setIsLoading(true)
-            loadBlockchainData()
-          }}>
+      {error && (
+        <Alert variant="warning" className="text-center mb-3">
+          <strong>Demo mode</strong> — {error}. Connect MetaMask to localhost:8545 to interact.{' '}
+          <Button size="sm" variant="outline-secondary" onClick={() => { setError(null); setIsLoading(true); loadBlockchainData(); }}>
             Retry
           </Button>
-        </div>
-      ) : isLoading ? (
+        </Alert>
+      )}
+
+      {isLoading ? (
         <Loading />
       ) : (
         <>
@@ -647,25 +636,21 @@ function App() {
 
           <hr/>
 
-          {proposals && quorum && (
-            <ProposalAnalytics 
-              proposals={proposals}
-              quorum={quorum}
-            />
-          )}
+          <ProposalAnalytics
+            proposals={proposals}
+            quorum={quorum}
+          />
 
-          {proposals && (
-            <Proposals
-              provider={provider}
-              dao={dao}
-              proposals={proposals}
-              quorum={quorum}
-              setIsLoading={setIsLoading}
-              loadBlockchainData={loadBlockchainData}
-              proposalCreationSuccess={proposalCreationSuccess}
-              setProposalCreationSuccess={setProposalCreationSuccess}
-            />
-          )}
+          <Proposals
+            provider={provider}
+            dao={dao}
+            proposals={proposals || []}
+            quorum={quorum}
+            setIsLoading={setIsLoading}
+            loadBlockchainData={loadBlockchainData}
+            proposalCreationSuccess={proposalCreationSuccess}
+            setProposalCreationSuccess={setProposalCreationSuccess}
+          />
         </>
       )}
       </Container>
