@@ -378,7 +378,9 @@ function App() {
       }, 20000); // 20 second timeout
 
       // Initiate provider
-      const provider = new ethers.providers.Web3Provider(window.ethereum)
+      const provider = window.ethereum
+        ? new ethers.providers.Web3Provider(window.ethereum)
+        : new ethers.providers.JsonRpcProvider('https://rpc.sepolia.org')
       setProvider(provider)
       // console.log('Provider set') // Removed for performance
 
