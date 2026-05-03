@@ -23,6 +23,12 @@ import config from '../config.json';
 // Utils: Import blockchain sync utilities
 import { syncAllDataFromBlockchain } from '../utils/blockchainSync';
 
+// Demo data for GH Pages showcase
+import { DEMO_PROPOSALS, DEMO_QUORUM, DEMO_TREASURY_BALANCE } from '../demoData';
+
+// GH Pages detection — true when hosted on github.io
+const IS_GH_PAGES = window.location.hostname.endsWith('github.io');
+
 function App() {
   const [provider, setProvider] = useState(null)
   const [dao, setDao] = useState(null)
@@ -346,10 +352,15 @@ function App() {
 
   const connectWallet = async () => {
     try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' })
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      const addr = ethers.utils.getAddress(accounts[0])
+      setAccount(addr)
       setWalletConnected(true)
-      setIsLoading(true)
-      loadBlockchainData()
+
+      if (!IS_GH_PAGES) {
+        setIsLoading(true)
+        loadBlockchainData()
+      }
     } catch (error) {
       console.error('Error connecting wallet:', error)
       setIsLoading(false)
@@ -483,6 +494,29 @@ function App() {
 
   useEffect(() => {
     const checkWalletConnection = async () => {
+      // ── GH Pages demo mode ───────────────────────────────────────────────
+      // Skip all blockchain calls. Inject demo data immediately so the full
+      // UI is visible. Still detect a pre-connected MetaMask wallet for
+      // the address display — but don't try to load contracts.
+      if (IS_GH_PAGES) {
+        setProposals(DEMO_PROPOSALS)
+        setQuorum(DEMO_QUORUM)
+        setTreasuryBalance(DEMO_TREASURY_BALANCE)
+        setIsLoading(false)
+
+        if (window.ethereum) {
+          try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+            if (accounts.length > 0) {
+              setAccount(ethers.utils.getAddress(accounts[0]))
+              setWalletConnected(true)
+            }
+          } catch (e) { /* wallet not yet authorized — that's fine */ }
+        }
+        return
+      }
+      // ────────────────────────────────────────────────────────────────────
+
       if (window.ethereum) {
         try {
           const accounts = await window.ethereum.request({ method: 'eth_accounts' })
@@ -510,13 +544,19 @@ function App() {
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', (accounts) => {
         if (accounts.length > 0) {
+          const addr = ethers.utils.getAddress(accounts[0])
+          setAccount(addr)
           setWalletConnected(true)
-          setIsLoading(true)
-          loadBlockchainData()
+          if (!IS_GH_PAGES) {
+            setIsLoading(true)
+            loadBlockchainData()
+          }
         } else {
           setWalletConnected(false)
           setAccount("")
-          setProposals(null)
+          if (!IS_GH_PAGES) {
+            setProposals(null)
+          }
           setIsLoading(false)
         }
       })
@@ -609,7 +649,8 @@ function App() {
         </div>
       )}
 
-      {error && (
+      {/* Suppress network error on GH Pages — demo data is already loaded */}
+      {error && !IS_GH_PAGES && (
         <Alert variant="warning" className="text-center mb-3">
           <strong>Demo mode</strong> — {error}. Connect MetaMask to localhost:8545 to interact.{' '}
           <Button size="sm" variant="outline-secondary" onClick={() => { setError(null); setIsLoading(true); loadBlockchainData(); }}>
