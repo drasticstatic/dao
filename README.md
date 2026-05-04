@@ -1,6 +1,11 @@
 # 🏛️ Enhanced DAO Governance Platform
 
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?style=flat)](https://drasticstatic.github.io/dao)
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey?style=flat)](https://github.com/drasticstatic/.github)
+
+**[→ View Live Demo](https://drasticstatic.github.io/dao)**
+
+> **Note:** The live demo runs against a local Hardhat node. Smart contract interaction requires the local node running with contracts deployed. The full UI and analytics dashboard are explorable without a wallet.
 
 A production-ready decentralized autonomous organization (DAO) where token holders can create, vote on, and finalize funding proposals with advanced voting mechanisms, community features, and comprehensive analytics.
 
